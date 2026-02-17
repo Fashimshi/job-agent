@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -79,6 +79,7 @@ class LinkedInSource(JobSource):
         logger.info(f"LinkedIn: fetching descriptions for {len(unique_jobs)} jobs...")
         async with httpx.AsyncClient(
             timeout=20,
+            follow_redirects=True,
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -91,11 +92,17 @@ class LinkedInSource(JobSource):
             async def _fetch_desc(job: RawJob) -> None:
                 async with sem:
                     try:
-                        desc = await self._fetch_job_description(client, job.posting_url)
+                        desc, apply_url, ats_type = await self._fetch_job_details(
+                            client, job.posting_url
+                        )
                         if desc:
                             job.description_raw = desc
+                        if apply_url:
+                            job.apply_url = apply_url
+                        if ats_type != ATSType.UNKNOWN:
+                            job.ats_type = ats_type
                     except Exception as e:
-                        logger.debug(f"Failed to fetch description for {job.title}: {e}")
+                        logger.debug(f"Failed to fetch details for {job.title}: {e}")
                     await asyncio.sleep(0.5)
 
             await asyncio.gather(*[_fetch_desc(j) for j in unique_jobs])
@@ -218,23 +225,79 @@ class LinkedInSource(JobSource):
             posted_date=posted_date,
         )
 
-    async def _fetch_job_description(self, client: httpx.AsyncClient, url: str) -> str:
-        """Fetch full job description from LinkedIn job detail page."""
+    async def _fetch_job_details(
+        self, client: httpx.AsyncClient, url: str
+    ) -> tuple[str, str, ATSType]:
+        """Fetch job description and detect actual apply URL + ATS type.
+
+        Returns (description, apply_url, ats_type).
+        """
         if not url:
-            return ""
+            return "", "", ATSType.UNKNOWN
         resp = await client.get(url)
         if resp.status_code != 200:
-            return ""
+            return "", "", ATSType.UNKNOWN
         soup = BeautifulSoup(resp.text, "html.parser")
-        # LinkedIn wraps description in a specific div
+
+        # Extract description
+        description = ""
         desc_div = soup.find("div", class_="show-more-less-html__markup")
         if desc_div:
-            return desc_div.get_text(separator="\n", strip=True)
-        # Fallback: try the description meta tag
-        meta = soup.find("meta", attrs={"name": "description"})
-        if meta and meta.get("content"):
-            return meta["content"]
-        return ""
+            description = desc_div.get_text(separator="\n", strip=True)
+        else:
+            meta = soup.find("meta", attrs={"name": "description"})
+            if meta and meta.get("content"):
+                description = meta["content"]
+
+        # Extract apply URL — LinkedIn job pages have an apply link/button
+        apply_url = ""
+        ats_type = ATSType.UNKNOWN
+
+        # Look for the apply button's href (external apply links)
+        for selector in [
+            {"class_": "apply-button"},
+            {"attrs": {"data-tracking-control-name": "public_jobs_apply-link-offsite"}},
+            {"class_": "top-card-layout__cta-container"},
+        ]:
+            container = soup.find("a", **selector) or soup.find("div", **selector)
+            if container:
+                link = container.get("href") if container.name == "a" else None
+                if not link:
+                    link_tag = container.find("a")
+                    link = link_tag.get("href") if link_tag else None
+                if link:
+                    apply_url = link
+                    break
+
+        # Also check for applyUrl in page scripts (LinkedIn embeds it in JSON-LD)
+        if not apply_url:
+            for script in soup.find_all("script", type="application/ld+json"):
+                text = script.string or ""
+                if "applyUrl" in text or "url" in text:
+                    import json
+                    try:
+                        data = json.loads(text)
+                        apply_url = data.get("applyUrl", "") or data.get("url", "")
+                    except (json.JSONDecodeError, AttributeError):
+                        pass
+
+        # Detect ATS type from apply URL domain
+        if apply_url:
+            ats_type = self._detect_ats(apply_url)
+
+        return description, apply_url, ats_type
+
+    @staticmethod
+    def _detect_ats(url: str) -> ATSType:
+        """Detect ATS type from a URL."""
+        url_lower = url.lower()
+        if "greenhouse.io" in url_lower:
+            return ATSType.GREENHOUSE
+        if "lever.co" in url_lower:
+            return ATSType.LEVER
+        if "myworkdayjobs" in url_lower or "wd1." in url_lower or "wd5." in url_lower:
+            return ATSType.WORKDAY
+        return ATSType.UNKNOWN
 
     @staticmethod
     def _get_time_filter(days: int) -> str:

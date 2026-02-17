@@ -98,7 +98,8 @@ class SerpAPISource(JobSource):
                 if any(skip in link.lower() for skip in [
                     "google.com/search", "indeed.com/rc", "ziprecruiter.com",
                     "salary.com", "talent.com", "jooble.org", "jobrapido.com",
-                    "bebee.com", "learn4good.com", "simplyhired.com",
+                    "bebee.com", "besbee.com", "beBee.com",
+                    "learn4good.com", "simplyhired.com",
                     "careerbuilder.com", "monster.com", "glassdoor.com/partner",
                     "adzuna.com", "neuvoo.com", "getwork.com", "lensa.com",
                     "recruit.net", "jobcase.com", "us.jobrapido.com",

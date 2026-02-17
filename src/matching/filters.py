@@ -111,6 +111,7 @@ class JobFilter:
         return (
             self._keyword_filter(title_lower)
             and self._seniority_filter(title_lower)
+            and self._location_filter(job)
             and self._not_startup(company_lower, title_lower)
         )
 
@@ -126,6 +127,42 @@ class JobFilter:
 
         if self.seniority_include:
             return any(s in title_lower for s in self.seniority_include)
+
+        return True
+
+    # Countries/regions that indicate non-US jobs
+    _NON_US_LOCATIONS = {
+        "poland", "germany", "france", "uk", "united kingdom", "india",
+        "canada", "brazil", "china", "japan", "singapore", "australia",
+        "ireland", "netherlands", "sweden", "switzerland", "spain", "italy",
+        "israel", "korea", "mexico", "argentina", "colombia", "chile",
+        "portugal", "belgium", "austria", "denmark", "norway", "finland",
+        "czech", "romania", "hungary", "ukraine", "turkey", "thailand",
+        "vietnam", "philippines", "indonesia", "malaysia", "taiwan",
+        "hong kong", "dubai", "uae", "saudi", "egypt", "nigeria",
+        "south africa", "kenya", "london", "berlin", "paris", "tokyo",
+        "mumbai", "bangalore", "hyderabad", "toronto", "vancouver",
+        "montreal", "sydney", "melbourne", "dublin", "amsterdam",
+        "stockholm", "zurich", "tel aviv", "seoul", "beijing", "shanghai",
+    }
+
+    def _location_filter(self, job: Job) -> bool:
+        """Reject jobs clearly outside the United States."""
+        location = (job.location or "").lower()
+        title = job.title.lower()
+
+        # Check if location or title contains non-US indicators
+        combined = f"{location} {title}"
+        for loc in self._NON_US_LOCATIONS:
+            if loc in combined:
+                logger.debug(f"Filtered out non-US job: {job.title} ({job.location})")
+                return False
+
+        # Also reject if title explicitly mentions a country
+        if " - " in job.title:
+            suffix = job.title.split(" - ")[-1].strip().lower()
+            if suffix in self._NON_US_LOCATIONS:
+                return False
 
         return True
 

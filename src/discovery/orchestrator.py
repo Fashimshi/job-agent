@@ -75,7 +75,7 @@ class DiscoveryOrchestrator:
             if key in seen:
                 # Priority: greenhouse/lever (auto-apply) > linkedin (real URLs) > serpapi
                 existing = seen[key]
-                priority = {"greenhouse": 3, "lever": 3, "linkedin": 2, "serpapi": 1}
+                priority = {"greenhouse": 3, "lever": 3, "workday": 3, "linkedin": 2, "serpapi": 1}
                 if priority.get(job.source, 0) > priority.get(existing.source, 0):
                     seen[key] = job
             else:

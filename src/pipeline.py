@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from src.application.cover_letter import CoverLetterGenerator
 from src.application.greenhouse_apply import GreenhouseApplicant
 from src.application.lever_apply import LeverApplicant
+from src.application.workday_apply import WorkdayApplicant
 from src.company.classifier import CompanyClassifier
 from src.company.registry import CompanyRegistry
 from src.discovery.greenhouse_source import GreenhouseSource
@@ -237,6 +238,8 @@ class Pipeline:
             applicant = GreenhouseApplicant(self.applicant_info)
         elif job.ats_type == ATSType.LEVER:
             applicant = LeverApplicant(self.applicant_info)
+        elif job.ats_type == ATSType.WORKDAY:
+            applicant = WorkdayApplicant(self.applicant_info)
         else:
             logger.warning(f"No auto-apply support for ATS: {job.ats_type}")
             return False
