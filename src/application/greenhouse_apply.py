@@ -41,7 +41,15 @@ class GreenhouseApplicant(BaseApplicant):
                 )
                 page = await context.new_page()
 
-                await page.goto(job.apply_url, wait_until="networkidle", timeout=30000)
+                await page.goto(job.apply_url, wait_until="domcontentloaded", timeout=60000)
+                # Wait for the application form to actually render
+                try:
+                    await page.wait_for_selector(
+                        '#first_name, #application_form, form[action*="application"]',
+                        timeout=15000,
+                    )
+                except Exception:
+                    pass  # Form might use non-standard selectors
                 await page.wait_for_timeout(2000)
 
                 # Fill standard fields
@@ -164,15 +172,21 @@ class GreenhouseApplicant(BaseApplicant):
 
     async def _submit(self, page: Page) -> None:
         """Submit the application form."""
-        submit_btn = page.locator(
-            'button[type="submit"], '
-            'input[type="submit"], '
-            'button:has-text("Submit"), '
-            'button:has-text("Apply")'
-        ).first
+        # Try multiple selectors in order of specificity
+        selectors = [
+            '#submit_app',
+            'button[type="submit"]',
+            'input[type="submit"]',
+            'button:has-text("Submit Application")',
+            'button:has-text("Submit")',
+            'button:has-text("Apply")',
+            'a:has-text("Submit")',
+        ]
+        for selector in selectors:
+            btn = page.locator(selector).first
+            if await btn.count() > 0:
+                await btn.click()
+                await page.wait_for_timeout(3000)
+                return
 
-        if await submit_btn.count() > 0:
-            await submit_btn.click()
-            await page.wait_for_timeout(3000)
-        else:
-            raise RuntimeError("Could not find submit button")
+        raise RuntimeError("Could not find submit button")
