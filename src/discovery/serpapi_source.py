@@ -94,18 +94,9 @@ class SerpAPISource(JobSource):
                 link = opt.get("link", "")
                 if not link:
                     continue
-                # Only accept links from legitimate sources (allowlist)
+                # Only accept links from legitimate sources
                 link_lower = link.lower()
-                is_trusted = any(domain in link_lower for domain in [
-                    # ATS platforms (auto-apply capable)
-                    "greenhouse.io", "lever.co", "myworkdayjobs.com",
-                    "workday.com",
-                    # Legitimate job platforms
-                    "linkedin.com", "indeed.com/viewjob", "glassdoor.com/job",
-                    # Company career pages (common patterns)
-                    "careers.", "jobs.", "/careers", "/jobs",
-                ])
-                if not is_trusted:
+                if self._is_junk_site(link_lower):
                     continue
                 # Prefer direct ATS links (auto-apply capable)
                 if any(ats in link_lower for ats in [
@@ -169,6 +160,50 @@ class SerpAPISource(JobSource):
         if "myworkdayjobs" in url_lower or "workday" in url_lower:
             return ATSType.WORKDAY
         return ATSType.UNKNOWN
+
+    # Job aggregator / spam sites — block the domain, not path
+    _JUNK_DOMAINS = {
+        "whatjobs.com", "bebee.com", "besbee.com", "jooble.org",
+        "jobrapido.com", "talent.com", "salary.com", "neuvoo.com",
+        "adzuna.com", "getwork.com", "lensa.com", "recruit.net",
+        "jobcase.com", "learn4good.com", "simplyhired.com",
+        "careerbuilder.com", "monster.com", "snagajob.com",
+        "ziprecruiter.com", "dice.com", "hired.com",
+        "wellfound.com", "builtin.com", "triplebyte.com",
+        "ladders.com", "flexjobs.com", "remotejobsanywhere.com",
+        "remotive.com", "weworkremotely.com", "remote.co",
+        "jobspresso.co", "workingnomads.com", "nodesk.co",
+        "jobgether.com", "otta.com", "cord.co", "huntr.co",
+        "clickajobs.com", "jobisjob.com", "neuvoo.ca",
+        "efinancialcareers.com", "ihire.com", "postjobfree.com",
+        "zippia.com", "comparably.com", "payscale.com",
+        "themuse.com", "idealist.org", "mediabistro.com",
+        "startwire.com", "jobvite.com", "applytojob.com",
+        "tarta.ai", "ai-jobs.net", "datajobs.com",
+        "google.com",  # Google search redirects, not actual jobs
+    }
+
+    @classmethod
+    def _is_junk_site(cls, url: str) -> bool:
+        """Check if a URL belongs to a junk job aggregator."""
+        from urllib.parse import urlparse
+        try:
+            hostname = urlparse(url).hostname or ""
+        except Exception:
+            return True
+        # Strip "www." prefix
+        if hostname.startswith("www."):
+            hostname = hostname[4:]
+        # Check against known junk domains
+        if hostname in cls._JUNK_DOMAINS:
+            return True
+        # Also block if the root domain matches (e.g., us.jobrapido.com)
+        parts = hostname.split(".")
+        if len(parts) >= 2:
+            root = ".".join(parts[-2:])
+            if root in cls._JUNK_DOMAINS:
+                return True
+        return False
 
     @staticmethod
     def _days_to_chips(days: int) -> str:
