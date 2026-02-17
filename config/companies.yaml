@@ -1,0 +1,200 @@
+whitelist:
+  # === FAANG / Big Tech ===
+  - name: "Google"
+    aliases: ["Alphabet", "Google LLC", "Google DeepMind"]
+    ats: "custom"
+    career_url: "https://careers.google.com/"
+
+  - name: "Meta"
+    aliases: ["Facebook", "Meta Platforms"]
+    ats: "custom"
+    career_url: "https://www.metacareers.com/"
+
+  - name: "Amazon"
+    aliases: ["AWS", "Amazon Web Services"]
+    ats: "custom"
+    career_url: "https://amazon.jobs/"
+
+  - name: "Apple"
+    aliases: []
+    ats: "custom"
+    career_url: "https://jobs.apple.com/"
+
+  - name: "Netflix"
+    aliases: []
+    ats: "custom"
+    career_url: "https://jobs.netflix.com/"
+
+  - name: "Microsoft"
+    aliases: ["Azure"]
+    ats: "custom"
+    career_url: "https://careers.microsoft.com/"
+
+  # === Large Tech (Greenhouse/Lever — auto-apply possible) ===
+  - name: "Stripe"
+    greenhouse_token: "stripe"
+    ats: "greenhouse"
+
+  - name: "Databricks"
+    greenhouse_token: "databricks"
+    ats: "greenhouse"
+
+  - name: "Cloudflare"
+    greenhouse_token: "cloudflare"
+    ats: "greenhouse"
+
+  - name: "Coinbase"
+    greenhouse_token: "coinbase"
+    ats: "greenhouse"
+
+  - name: "DoorDash"
+    greenhouse_token: "doordashusa"
+    ats: "greenhouse"
+
+  - name: "Anthropic"
+    greenhouse_token: "anthropic"
+    ats: "greenhouse"
+
+  - name: "OpenAI"
+    ats: "custom"
+    career_url: "https://openai.com/careers/"
+
+  - name: "Palantir"
+    ats: "custom"
+    career_url: "https://www.palantir.com/careers/"
+
+  - name: "Snowflake"
+    ats: "custom"
+    career_url: "https://careers.snowflake.com/"
+
+  - name: "Scale AI"
+    ats: "custom"
+    career_url: "https://scale.com/careers"
+
+  - name: "Ramp"
+    ats: "custom"
+    career_url: "https://ramp.com/careers"
+
+  - name: "Notion"
+    ats: "custom"
+    career_url: "https://www.notion.so/careers"
+
+  - name: "Figma"
+    greenhouse_token: "figma"
+    ats: "greenhouse"
+
+  - name: "Datadog"
+    greenhouse_token: "datadog"
+    ats: "greenhouse"
+
+  - name: "Twilio"
+    greenhouse_token: "twilio"
+    ats: "greenhouse"
+
+  - name: "Square"
+    aliases: ["Block"]
+    greenhouse_token: "block"
+    ats: "greenhouse"
+
+  - name: "Lyft"
+    greenhouse_token: "lyft"
+    ats: "greenhouse"
+
+  - name: "Uber"
+    ats: "custom"
+    career_url: "https://www.uber.com/us/en/careers/"
+
+  - name: "Airbnb"
+    greenhouse_token: "airbnb"
+    ats: "greenhouse"
+
+  - name: "Pinterest"
+    greenhouse_token: "pinterest"
+    ats: "greenhouse"
+
+  - name: "Snap"
+    aliases: ["Snapchat"]
+    ats: "custom"
+    career_url: "https://careers.snap.com/"
+
+  - name: "Reddit"
+    greenhouse_token: "reddit"
+    ats: "greenhouse"
+
+  - name: "Spotify"
+    lever_slug: "spotify"
+    ats: "lever"
+
+  - name: "LinkedIn"
+    greenhouse_token: "linkedin"
+    ats: "greenhouse"
+
+  - name: "Robinhood"
+    greenhouse_token: "robinhood"
+    ats: "greenhouse"
+
+  # === Fortune 500 / Established (manual apply — materials generated) ===
+  - name: "NVIDIA"
+    ats: "workday"
+    career_url: "https://nvidia.wd5.myworkdayjobs.com/"
+
+  - name: "Adobe"
+    ats: "workday"
+    career_url: "https://careers.adobe.com/"
+
+  - name: "Salesforce"
+    ats: "custom"
+    career_url: "https://careers.salesforce.com/"
+
+  - name: "Intel"
+    ats: "workday"
+    career_url: "https://jobs.intel.com/"
+
+  - name: "IBM"
+    ats: "custom"
+    career_url: "https://www.ibm.com/careers"
+
+  - name: "Oracle"
+    ats: "custom"
+    career_url: "https://www.oracle.com/careers/"
+
+  - name: "JPMorgan Chase"
+    aliases: ["JPMC", "JP Morgan", "JPMorgan"]
+    ats: "custom"
+    career_url: "https://careers.jpmorgan.com/"
+
+  - name: "Goldman Sachs"
+    ats: "custom"
+    career_url: "https://www.goldmansachs.com/careers/"
+
+  - name: "Capital One"
+    ats: "workday"
+    career_url: "https://www.capitalonecareers.com/"
+
+  - name: "Visa"
+    ats: "custom"
+    career_url: "https://usa.visa.com/careers.html"
+
+  - name: "PayPal"
+    ats: "custom"
+    career_url: "https://careers.pypl.com/"
+
+  # === Excluded ===
+  - name: "Walmart"
+    aliases: ["Walmart Global Tech"]
+    ats: "workday"
+    exclude_from_apply: true
+    notes: "Current employer"
+
+blacklist_patterns:
+  funding_keywords:
+    - "seed"
+    - "series a"
+    - "series b"
+    - "pre-seed"
+  company_keywords:
+    - "stealth"
+    - "pre-revenue"
+    - "early-stage"
+    - "startup"
+  max_employee_count: 500

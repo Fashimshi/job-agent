@@ -1,0 +1,14 @@
+.env
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+.DS_Store
+config/resume.pdf
+config/resume_text.txt
+Fauzan_MohammedResume_cs.pdf
+.claude/

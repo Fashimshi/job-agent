@@ -1,0 +1,49 @@
+name: Job Agent
+
+on:
+  schedule:
+    # Monday & Friday at 4:30 PM ET (21:30 UTC)
+    - cron: "30 21 * * 1,5"
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install .
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      - name: Write .env from secrets
+        run: |
+          cat > .env << 'ENVEOF'
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          SERPAPI_KEY=${{ secrets.SERPAPI_KEY }}
+          SMTP_HOST=smtp.gmail.com
+          SMTP_PORT=587
+          SMTP_USER=mohammedfauzan44@gmail.com
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          NOTIFICATION_EMAIL=mohammedfauzan44@gmail.com
+          ENVEOF
+
+      - name: Restore resume files
+        run: |
+          echo "${{ secrets.RESUME_PDF_BASE64 }}" | base64 -d > config/resume.pdf
+          echo "${{ secrets.RESUME_TEXT }}" > config/resume_text.txt
+
+      - name: Create data directory
+        run: mkdir -p data/screenshots
+
+      - name: Run job agent
+        run: python -m src.cli run --no-dry-run

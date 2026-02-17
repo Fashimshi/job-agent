@@ -1,0 +1,79 @@
+applicant:
+  first_name: "Fauzan"
+  last_name: "Mohammed"
+  email: "mohammedfauzan44@gmail.com"
+  phone: "9296138518"
+  linkedin_url: "https://linkedin.com/in/fauzanmohammed"
+  github_url: null
+  portfolio_url: null
+  location: "Sunnyvale, CA"
+  current_company: "Walmart Global Tech"
+  work_authorized: true
+  sponsorship_needed: false
+  sponsorship_details: "Currently authorized on OPT/H1B, may need future sponsorship"
+
+discovery:
+  queries:
+    - "Senior Data Scientist"
+    - "Senior Machine Learning Engineer"
+    - "Senior ML Engineer"
+    - "Senior NLP Engineer"
+    - "Senior Applied Scientist"
+    - "Staff Data Scientist"
+    - "Staff Machine Learning Engineer"
+  location: "United States"
+  posted_within_days: 3
+  remote_ok: true
+
+matching:
+  primary_provider: "openai"
+  fallback_provider: "anthropic"
+  scoring_model: "gpt-4o-mini"
+  scoring_model_fallback: "claude-sonnet-4-5-20250929"
+  cover_letter_model: "gpt-4o"
+  cover_letter_model_fallback: "claude-sonnet-4-5-20250929"
+  min_score_auto_apply: 85
+  min_score_notify: 75
+  min_score_log: 60
+
+application:
+  dry_run: true
+  max_per_day: 10
+  screenshot_dir: "./data/screenshots"
+
+seniority:
+  include:
+    - "senior"
+    - "staff"
+    - "lead"
+  exclude:
+    - "intern"
+    - "junior"
+    - "associate"
+    - "director"
+    - "vp"
+    - "vice president"
+    - "principal"
+    - "manager"
+    - "head of"
+
+role_keywords:
+  - "data scientist"
+  - "machine learning"
+  - "ml engineer"
+  - "nlp"
+  - "ai engineer"
+  - "applied scientist"
+  - "research scientist"
+  - "llm"
+
+notifications:
+  channels:
+    - "console"
+    - "email"
+  digest_enabled: true
+
+paths:
+  resume_pdf: "./config/resume.pdf"
+  resume_text: "./config/resume_text.txt"
+  database: "./data/jobs.db"
