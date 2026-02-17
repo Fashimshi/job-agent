@@ -94,21 +94,22 @@ class SerpAPISource(JobSource):
                 link = opt.get("link", "")
                 if not link:
                     continue
-                # Skip sketchy job aggregators — only use legit sources
-                if any(skip in link.lower() for skip in [
-                    "google.com/search", "indeed.com/rc", "ziprecruiter.com",
-                    "salary.com", "talent.com", "jooble.org", "jobrapido.com",
-                    "bebee.com", "besbee.com", "beBee.com",
-                    "learn4good.com", "simplyhired.com",
-                    "careerbuilder.com", "monster.com", "glassdoor.com/partner",
-                    "adzuna.com", "neuvoo.com", "getwork.com", "lensa.com",
-                    "recruit.net", "jobcase.com", "us.jobrapido.com",
-                ]):
+                # Only accept links from legitimate sources (allowlist)
+                link_lower = link.lower()
+                is_trusted = any(domain in link_lower for domain in [
+                    # ATS platforms (auto-apply capable)
+                    "greenhouse.io", "lever.co", "myworkdayjobs.com",
+                    "workday.com",
+                    # Legitimate job platforms
+                    "linkedin.com", "indeed.com/viewjob", "glassdoor.com/job",
+                    # Company career pages (common patterns)
+                    "careers.", "jobs.", "/careers", "/jobs",
+                ])
+                if not is_trusted:
                     continue
-                # Prefer Greenhouse/Lever/company career pages
-                if any(ats in link.lower() for ats in [
+                # Prefer direct ATS links (auto-apply capable)
+                if any(ats in link_lower for ats in [
                     "greenhouse.io", "lever.co", "myworkdayjobs",
-                    "linkedin.com/jobs", "careers.", "jobs.",
                 ]):
                     apply_url = link
                     break
