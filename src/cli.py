@@ -38,6 +38,7 @@ def setup_logging(verbose: bool = False) -> None:
 @app.command()
 def run(
     dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Fill forms but don't submit"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt (for CI/automation)"),
     query: str = typer.Option(None, "--query", "-q", help="Override search query (use instead of config queries)"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose logging"),
 ) -> None:
@@ -62,7 +63,7 @@ def run(
         border_style="blue",
     ))
 
-    if not dry_run:
+    if not dry_run and not yes:
         confirm = typer.confirm(
             "LIVE MODE: Applications will be submitted. Are you sure?",
             default=False,
