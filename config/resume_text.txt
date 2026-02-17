@@ -1,0 +1,55 @@
+Fauzan Mohammed
+mohammedfauzan44@gmail.com | linkedin.com/in/fauzanmohammed
+Education
+Rensselaer Polytechnic Institute Troy, NY
+Masters in Computer Science Aug ’23 – Dec ’24
+Kwame Nkrumah University of Science and Technology Kumasi, Ghana
+Bachelor of Science in Mechanical Engineering Sep ’16 – June ’20
+Experience
+Data Scientist – NLP/LLM Systems + Responsible AI Feb ’25 – Present
+Walmart Global Tech Sunnyvale, CA
+• Contributed to the design and deployment of a production multi-agent LLM system powering Walmart’s conversational shopping
+platform,collaboratingwithengineeringteamstoorchestrateintelligentsearch,guideddiscovery,andpersonalizedrecommendations
+for 10M+ monthly active users.
+• Designed and built a product relevance judge using prompt-tuned LLMs to evaluate search result quality across raw and reranked
+retrieved products, driving measurable improvements in ranking precision and consistency across product categories.
+• Developed a generated search quality judge to evaluate LLM-generated search queries fed to the product search API, identifying
+malformed and low-quality queries to improve retrieval precision and downstream recommendation accuracy.
+• Built production guardrail infrastructure with the team using prompt-tuned LLM judges on GCP and Element Gateway, imple-
+menting real-time safety enforcement and hallucination detection to ensure responsible AI compliance for 10M+ users.
+• Developed an event title generator that analyzes customer conversations and classifies intent into structured event categories,
+enhancing personalization and contextual understanding in the unified shopping experience.
+• DevelopedunsupervisedNLPpipelineusingDBSCANclusteringfortopicmodelingandintentextraction,expandingchatbotquery
+coverage from 15% to 74%.
+Data Scientist, Intern May ’24 – Aug ’24
+Walmart Global Tech Sunnyvale, CA
+• Engineered Transformer-based fallback detection system using semantic clustering to classify 100K+ daily fallback queries into 27
+intent clusters, improving diagnostic accuracy by 6%.
+• OptimizedLLMrouterarchitecturethroughpromptengineeringandquerydecomposition,improvingtask-selectionaccuracyby4%
+and reducing latency by 18%.
+• Built automated evaluation dashboards using SQL and Python for real-time monitoring of precision, recall, and prompt drift,
+reducing experimentation cycles by 30%.
+Junior Machine Learning Engineer Dec ’22 – Apr ’23
+Omdena Thraive Remote
+• EngineeredBERT-basedNLPmodelswithattentionmechanisms,achieving85%classificationaccuracyand20%improvedemotion
+detection on 5K+ mental health journal entries.
+• BuiltanddeployedproductionanalyticsdashboardonGCPusingFlaskandPlotly,implementingreal-timedatapipelinesfor200+
+clinical users.
+Projects
+AI-Powered Financial Rule Automation System Dec ’24
+• Built AI rule-generation engine integrating multiple Transformer models (MiniLM, RoBERTa, DeBERTa) with QuickBooks API,
+implementing multi-task fusion architecture to auto-categorize transactions at 92% precision and reduce manual rule creation by
+70%.
+Leadership
+Co-founder and Director Aug ’19 – Present
+Fama Foundation Accra, Ghana
+• Ledimpactfulprogramsacross10Ghanaiancommunities,enrolling325teenagegirlsincomputerprogrammingandliteracyeduca-
+tion.
+Technical Skills
+Languages: Python, SQL, Java
+ML/DL: PyTorch, TensorFlow, Scikit-learn, Hugging Face Transformers, Sentence Transformers, spaCy, NLTK
+LLM & AI: LangChain, LlamaIndex, FAISS, OpenAI/Anthropic/Gemini APIs
+Cloud & Data: GCP (Vertex AI, BigQuery, Cloud Run), Docker, Kubernetes, Pandas, NumPy, Spark
+MLOps: MLflow, Weights & Biases, Flask, FastAPI, CI/CD, Git, DVC
+Specialties: Multi-AgentSystems,LLMFine-Tuning(SFT,RLHF,DPO),PromptEngineering,RAG,ModelEvaluation,Responsible
+AI

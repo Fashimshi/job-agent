@@ -37,11 +37,6 @@ jobs:
           NOTIFICATION_EMAIL=mohammedfauzan44@gmail.com
           ENVEOF
 
-      - name: Restore resume files
-        run: |
-          echo "${{ secrets.RESUME_PDF_BASE64 }}" | base64 -d > config/resume.pdf
-          echo "${{ secrets.RESUME_TEXT }}" > config/resume_text.txt
-
       - name: Create data directory
         run: mkdir -p data/screenshots
 

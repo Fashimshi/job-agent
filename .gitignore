@@ -8,7 +8,5 @@ dist/
 build/
 .venv/
 .DS_Store
-config/resume.pdf
-config/resume_text.txt
 Fauzan_MohammedResume_cs.pdf
 .claude/
