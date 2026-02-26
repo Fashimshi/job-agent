@@ -32,8 +32,8 @@ matching:
   scoring_model_fallback: "claude-sonnet-4-5-20250929"
   cover_letter_model: "gpt-4o"
   cover_letter_model_fallback: "claude-sonnet-4-5-20250929"
-  min_score_auto_apply: 78
-  min_score_notify: 75
+  min_score_auto_apply: 75
+  min_score_notify: 68
   min_score_log: 60
 
 application:

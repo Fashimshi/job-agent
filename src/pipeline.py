@@ -5,6 +5,9 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
+
+import httpx
 
 from src.application.cover_letter import CoverLetterGenerator
 from src.application.greenhouse_apply import GreenhouseApplicant
@@ -97,10 +100,11 @@ class Pipeline:
         applied_count = 0
         manual_count = 0
 
-        # Auto-apply candidates (score >= threshold, Greenhouse/Lever ATS)
+        # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
         auto_candidates = self.db.get_auto_apply_candidates(
             self.settings.matching.min_score_auto_apply
         )
+        failed_auto = []  # Jobs that couldn't auto-apply → fall through to manual
         for job, score in auto_candidates:
             if self.registry.is_excluded_from_apply(job.company):
                 continue
@@ -111,11 +115,20 @@ class Pipeline:
             result = await self.apply_to_job(job, score, dry_run)
             if result:
                 applied_count += 1
+            else:
+                # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
+                failed_auto.append((job, score))
 
-        # Manual notification candidates (score >= notify threshold, non-auto ATS)
+        # Manual notification: scored >= notify threshold + failed auto-apply jobs
         manual_candidates = self.db.get_jobs_needing_notification(
             self.settings.matching.min_score_notify
         )
+        # Merge failed auto-apply into manual list (avoid duplicates)
+        manual_job_ids = {j.id for j, _ in manual_candidates}
+        for job, score in failed_auto:
+            if job.id not in manual_job_ids:
+                manual_candidates.append((job, score))
+
         for job, score in manual_candidates:
             if self.registry.is_excluded_from_apply(job.company):
                 continue
@@ -217,9 +230,52 @@ class Pipeline:
         domain = urlparse(url).hostname or ""
         return any(domain.endswith(trusted) for trusted in self.TRUSTED_APPLY_DOMAINS)
 
+    async def _resolve_ats(self, job: Job) -> None:
+        """Follow the apply URL to detect the real ATS platform."""
+        if job.ats_type not in (ATSType.UNKNOWN, ATSType.CUSTOM):
+            return  # Already known
+        if not job.apply_url:
+            return
+
+        try:
+            async with httpx.AsyncClient(
+                follow_redirects=True,
+                timeout=15,
+                headers={"User-Agent": "Mozilla/5.0"},
+            ) as client:
+                resp = await client.head(job.apply_url)
+                final_url = str(resp.url).lower()
+
+                if "greenhouse.io" in final_url or "boards.greenhouse" in final_url:
+                    job.ats_type = ATSType.GREENHOUSE
+                    job.apply_url = str(resp.url)
+                elif "lever.co" in final_url or "jobs.lever" in final_url:
+                    job.ats_type = ATSType.LEVER
+                    job.apply_url = str(resp.url)
+                elif "myworkdayjobs" in final_url or "wd1." in final_url or "wd5." in final_url:
+                    job.ats_type = ATSType.WORKDAY
+                    job.apply_url = str(resp.url)
+
+                if job.ats_type != ATSType.UNKNOWN:
+                    logger.info(
+                        f"  Resolved ATS for {job.company}: {job.ats_type.value} "
+                        f"({str(resp.url)[:80]})"
+                    )
+                    # Update in database
+                    self.db.conn.execute(
+                        "UPDATE jobs SET ats_type=?, apply_url=? WHERE id=?",
+                        (job.ats_type.value, job.apply_url, job.id),
+                    )
+                    self.db.conn.commit()
+        except Exception as e:
+            logger.debug(f"Failed to resolve ATS for {job.apply_url}: {e}")
+
     async def apply_to_job(self, job: Job, score: MatchScore, dry_run: bool) -> bool:
         """Auto-apply to a single job."""
         logger.info(f"Applying to: {job.title} at {job.company} (score: {score.overall_score})")
+
+        # Resolve ATS type if unknown (follow redirects to detect platform)
+        await self._resolve_ats(job)
 
         # Safety check: only apply on trusted domains
         if not self._is_trusted_apply_url(job.apply_url):
@@ -241,7 +297,7 @@ class Pipeline:
         elif job.ats_type == ATSType.WORKDAY:
             applicant = WorkdayApplicant(self.applicant_info)
         else:
-            logger.warning(f"No auto-apply support for ATS: {job.ats_type}")
+            logger.info(f"No auto-apply for {job.title} at {job.company} — ATS: {job.ats_type.value}")
             return False
 
         result = await applicant.apply(

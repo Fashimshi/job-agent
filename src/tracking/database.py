@@ -176,7 +176,6 @@ class Database:
                JOIN match_scores ms ON j.id = ms.job_id
                LEFT JOIN applications a ON j.id = a.job_id
                WHERE ms.overall_score >= ?
-                 AND j.ats_type IN ('greenhouse', 'lever', 'workday')
                  AND a.id IS NULL
                ORDER BY ms.overall_score DESC""",
             (min_score,),
@@ -206,7 +205,7 @@ class Database:
                JOIN match_scores ms ON j.id = ms.job_id
                LEFT JOIN applications a ON j.id = a.job_id
                WHERE ms.overall_score >= ?
-                 AND j.ats_type NOT IN ('greenhouse', 'lever', 'workday')
+                 AND j.ats_type NOT IN ('greenhouse', 'lever', 'workday', 'unknown')
                  AND (a.id IS NULL OR a.status = 'manual_needed')
                ORDER BY ms.overall_score DESC""",
             (min_score,),
