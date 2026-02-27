@@ -211,24 +211,17 @@ class Pipeline:
         await asyncio.gather(*[_score_one(job) for job in jobs], return_exceptions=True)
         return results
 
-    # Trusted domains for auto-apply — ONLY submit applications on these
-    TRUSTED_APPLY_DOMAINS = {
-        "greenhouse.io", "boards.greenhouse.io",
-        "lever.co", "jobs.lever.co",
-        "myworkdayjobs.com",
-        "linkedin.com", "www.linkedin.com",
-        # Direct company career pages
-        "careers.google.com", "www.metacareers.com", "amazon.jobs",
-        "jobs.apple.com", "jobs.netflix.com", "careers.microsoft.com",
+    # Trusted ATS domains for auto-apply
+    TRUSTED_ATS_DOMAINS = {
+        "greenhouse.io", "lever.co", "myworkdayjobs.com", "workday.com",
     }
 
     def _is_trusted_apply_url(self, url: str) -> bool:
-        """Only allow auto-apply on official ATS platforms and company sites."""
+        """Only allow auto-apply on official ATS platforms."""
         if not url:
             return False
-        from urllib.parse import urlparse
-        domain = urlparse(url).hostname or ""
-        return any(domain.endswith(trusted) for trusted in self.TRUSTED_APPLY_DOMAINS)
+        hostname = urlparse(url).hostname or ""
+        return any(hostname.endswith(d) for d in self.TRUSTED_ATS_DOMAINS)
 
     async def _resolve_ats(self, job: Job) -> None:
         """Follow the apply URL to detect the real ATS platform."""
@@ -277,13 +270,11 @@ class Pipeline:
         # Resolve ATS type if unknown (follow redirects to detect platform)
         await self._resolve_ats(job)
 
-        # Safety check: only apply on trusted domains
-        if not self._is_trusted_apply_url(job.apply_url):
-            logger.warning(
-                f"SKIPPING auto-apply for {job.title} at {job.company} — "
-                f"untrusted apply URL: {job.apply_url}"
-            )
-            return False
+        # Safety check: if ATS is known (greenhouse/lever/workday), trust it.
+        # For unknown ATS, check if the URL at least points to a trusted domain.
+        if job.ats_type in (ATSType.UNKNOWN, ATSType.CUSTOM):
+            if not self._is_trusted_apply_url(job.apply_url):
+                return False  # Silently skip — not an ATS we can auto-apply to
 
         # Parse for cover letter
         parsed = await self.parser.parse(job.title, job.company, job.description_raw or "")

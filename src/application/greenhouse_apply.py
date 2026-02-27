@@ -83,28 +83,24 @@ class GreenhouseApplicant(BaseApplicant):
                 error_message=str(e),
             )
 
+    async def _safe_fill(self, page: Page, selector: str, value: str) -> bool:
+        """Fill a field safely — skip if not visible/interactable."""
+        try:
+            el = page.locator(selector).first
+            if await el.count() > 0 and await el.is_visible():
+                await el.fill(value, timeout=5000)
+                return True
+        except Exception:
+            pass
+        return False
+
     async def _fill_form(self, page: Page, cover_letter: str, resume_path: Path) -> None:
         """Fill Greenhouse application form fields."""
 
-        # First name
-        first_name = page.locator("#first_name")
-        if await first_name.count() > 0:
-            await first_name.fill(self.info.first_name)
-
-        # Last name
-        last_name = page.locator("#last_name")
-        if await last_name.count() > 0:
-            await last_name.fill(self.info.last_name)
-
-        # Email
-        email = page.locator("#email")
-        if await email.count() > 0:
-            await email.fill(self.info.email)
-
-        # Phone
-        phone = page.locator("#phone")
-        if await phone.count() > 0:
-            await phone.fill(self.info.phone)
+        await self._safe_fill(page, "#first_name", self.info.first_name)
+        await self._safe_fill(page, "#last_name", self.info.last_name)
+        await self._safe_fill(page, "#email", self.info.email)
+        await self._safe_fill(page, "#phone", self.info.phone)
 
         # LinkedIn URL — try common selectors
         for selector in [
@@ -112,30 +108,28 @@ class GreenhouseApplicant(BaseApplicant):
             'input[placeholder*="linkedin" i]',
             'input[id*="linkedin" i]',
         ]:
-            linkedin = page.locator(selector)
-            if await linkedin.count() > 0:
-                await linkedin.first.fill(self.info.linkedin_url)
+            if await self._safe_fill(page, selector, self.info.linkedin_url):
                 break
 
         # Resume upload
-        resume_input = page.locator('input[type="file"]').first
-        if await resume_input.count() > 0:
-            await resume_input.set_input_files(str(resume_path))
-            logger.info("Resume uploaded")
-            await page.wait_for_timeout(1000)
+        try:
+            resume_input = page.locator('input[type="file"]').first
+            if await resume_input.count() > 0:
+                await resume_input.set_input_files(str(resume_path))
+                logger.info("Resume uploaded")
+                await page.wait_for_timeout(1000)
+        except Exception as e:
+            logger.debug(f"Resume upload failed: {e}")
 
-        # Cover letter — try textarea first, then file upload
-        cover_textarea = page.locator('textarea[name*="cover_letter" i], textarea[id*="cover_letter" i]')
-        if await cover_textarea.count() > 0:
-            await cover_textarea.first.fill(cover_letter)
-        else:
-            # Some Greenhouse forms have a text input for cover letter
-            cover_input = page.locator(
-                'textarea[placeholder*="cover letter" i], '
-                'textarea[name*="cover" i]'
-            )
-            if await cover_input.count() > 0:
-                await cover_input.first.fill(cover_letter)
+        # Cover letter — try multiple selectors, skip if none visible
+        for selector in [
+            'textarea[name*="cover_letter" i]',
+            'textarea[id*="cover_letter" i]',
+            'textarea[placeholder*="cover letter" i]',
+            'textarea[name*="cover" i]',
+        ]:
+            if await self._safe_fill(page, selector, cover_letter):
+                break
 
         # Location / Current Location
         for selector in [
