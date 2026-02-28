@@ -136,9 +136,7 @@ class GreenhouseApplicant(BaseApplicant):
             'input[name*="location" i]',
             'input[id*="location" i]',
         ]:
-            loc = page.locator(selector)
-            if await loc.count() > 0:
-                await loc.first.fill(self.info.location)
+            if await self._safe_fill(page, selector, self.info.location):
                 break
 
         # Work authorization — look for select dropdowns or radio buttons
@@ -165,7 +163,7 @@ class GreenhouseApplicant(BaseApplicant):
                         pass
 
     async def _submit(self, page: Page) -> None:
-        """Submit the application form."""
+        """Submit the application form and verify it went through."""
         # Try multiple selectors in order of specificity
         selectors = [
             '#submit_app',
@@ -180,7 +178,33 @@ class GreenhouseApplicant(BaseApplicant):
             btn = page.locator(selector).first
             if await btn.count() > 0:
                 await btn.click()
-                await page.wait_for_timeout(3000)
+                await page.wait_for_timeout(5000)
+
+                # Check for validation errors (form rejected)
+                error_msgs = page.locator(
+                    '.field-error, .error-message, '
+                    '[class*="error"], [id*="error"], '
+                    '.field_with_errors'
+                )
+                if await error_msgs.count() > 0:
+                    error_text = await error_msgs.first.text_content()
+                    raise RuntimeError(
+                        f"Form submitted but has validation errors: {error_text}"
+                    )
+
+                # Check for confirmation (application accepted)
+                confirmation = page.locator(
+                    ':has-text("Thank you"), :has-text("application has been"), '
+                    ':has-text("successfully submitted"), :has-text("received your application")'
+                )
+                if await confirmation.count() > 0:
+                    logger.info("Confirmed: application accepted")
+                    return
+
+                # If URL changed after submit, likely went through
+                # (Greenhouse redirects to a thank-you page)
+                logger.info("Submit clicked — no confirmation page detected, "
+                           "may have succeeded")
                 return
 
         raise RuntimeError("Could not find submit button")
