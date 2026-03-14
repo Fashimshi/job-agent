@@ -291,6 +291,8 @@ class GreenhouseApplicant(BaseApplicant):
 
     async def _submit(self, page: Page) -> None:
         """Submit the application form and verify it went through."""
+        pre_url = page.url
+
         # Try multiple selectors in order of specificity
         selectors = [
             '#submit_app',
@@ -307,31 +309,46 @@ class GreenhouseApplicant(BaseApplicant):
                 await btn.click()
                 await page.wait_for_timeout(5000)
 
-                # Check for validation errors (form rejected)
-                error_msgs = page.locator(
-                    '.field-error, .error-message, '
-                    '[class*="error"], [id*="error"], '
-                    '.field_with_errors'
-                )
-                if await error_msgs.count() > 0:
-                    error_text = await error_msgs.first.text_content()
-                    raise RuntimeError(
-                        f"Form submitted but has validation errors: {error_text}"
-                    )
+                # If URL changed after submit, Greenhouse redirected to
+                # a thank-you page — application went through
+                if page.url != pre_url:
+                    logger.info("Confirmed: URL changed after submit (redirected)")
+                    return
 
-                # Check for confirmation (application accepted)
-                confirmation = page.locator(
-                    ':has-text("Thank you"), :has-text("application has been"), '
-                    ':has-text("successfully submitted"), :has-text("received your application")'
-                )
-                if await confirmation.count() > 0:
+                # Check for confirmation text on the same page
+                page_text = await page.text_content("body") or ""
+                page_text_lower = page_text.lower()
+
+                confirmation_phrases = [
+                    "thank you", "application has been",
+                    "successfully submitted", "received your application",
+                    "thanks for applying", "application received",
+                ]
+                if any(phrase in page_text_lower for phrase in confirmation_phrases):
                     logger.info("Confirmed: application accepted")
                     return
 
-                # If URL changed after submit, likely went through
-                # (Greenhouse redirects to a thank-you page)
-                logger.info("Submit clicked — no confirmation page detected, "
-                           "may have succeeded")
+                # Check for visible validation errors (red highlighted fields)
+                # Use specific Greenhouse error selectors, only visible ones
+                error_msgs = page.locator(
+                    '.field-error:visible, '
+                    '.field_with_errors:visible, '
+                    '.error-message:visible, '
+                    '#error_explanation:visible'
+                )
+                if await error_msgs.count() > 0:
+                    error_texts = []
+                    for i in range(min(await error_msgs.count(), 3)):
+                        txt = await error_msgs.nth(i).text_content()
+                        if txt and txt.strip():
+                            error_texts.append(txt.strip())
+                    if error_texts:
+                        raise RuntimeError(
+                            f"Form has validation errors: {'; '.join(error_texts)}"
+                        )
+
+                # No errors detected, no confirmation — assume it went through
+                logger.info("Submit clicked — no errors detected, likely succeeded")
                 return
 
         raise RuntimeError("Could not find submit button")
