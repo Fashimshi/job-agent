@@ -181,7 +181,7 @@ class Database:
         return results
 
     def get_auto_apply_candidates(self, min_score: int) -> list[tuple[Job, MatchScore]]:
-        """Get jobs that are scored high enough and have auto-apply ATS."""
+        """Get jobs scored high enough, prioritizing LinkedIn + top companies."""
         rows = self.conn.execute(
             """SELECT j.*, ms.id as ms_id, ms.overall_score, ms.skill_score,
                       ms.experience_score, ms.seniority_score, ms.reasoning,
@@ -191,7 +191,9 @@ class Database:
                LEFT JOIN applications a ON j.id = a.job_id
                WHERE ms.overall_score >= ?
                  AND a.id IS NULL
-               ORDER BY ms.overall_score DESC""",
+               ORDER BY
+                 CASE WHEN j.source = 'linkedin' THEN 0 ELSE 1 END,
+                 ms.overall_score DESC""",
             (min_score,),
         ).fetchall()
         results = []
@@ -210,7 +212,7 @@ class Database:
         return results
 
     def get_jobs_needing_notification(self, min_score: int) -> list[tuple[Job, MatchScore]]:
-        """Get scored jobs that haven't been notified about yet."""
+        """Get scored jobs that haven't been notified about yet, LinkedIn first."""
         rows = self.conn.execute(
             """SELECT j.*, ms.id as ms_id, ms.overall_score, ms.skill_score,
                       ms.experience_score, ms.seniority_score, ms.reasoning,
@@ -220,7 +222,9 @@ class Database:
                LEFT JOIN applications a ON j.id = a.job_id
                WHERE ms.overall_score >= ?
                  AND a.id IS NULL
-               ORDER BY ms.overall_score DESC""",
+               ORDER BY
+                 CASE WHEN j.source = 'linkedin' THEN 0 ELSE 1 END,
+                 ms.overall_score DESC""",
             (min_score,),
         ).fetchall()
         results = []

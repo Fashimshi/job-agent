@@ -95,12 +95,15 @@ class JobFilter:
         self.seniority_exclude = [s.lower() for s in settings.seniority.exclude]
 
     def apply_all(self, jobs: list[Job]) -> list[Job]:
-        """Apply all filters, sort by company tier, return passing jobs."""
+        """Apply all filters, sort by LinkedIn first then company tier."""
         initial = len(jobs)
         passed = [j for j in jobs if self.passes(j)]
 
-        # Sort by company tier (FAANG first, then Big Tech, etc.)
-        passed.sort(key=lambda j: get_company_tier(j.company))
+        # Sort: LinkedIn first, then by company tier (FAANG > Big Tech > ...)
+        passed.sort(key=lambda j: (
+            0 if j.source == "linkedin" else 1,
+            get_company_tier(j.company),
+        ))
 
         logger.info(f"Filters: {len(passed)}/{initial} jobs passed")
         return passed
