@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -74,12 +74,21 @@ CREATE TABLE IF NOT EXISTS companies (
     classified_at   TEXT
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+    id          TEXT PRIMARY KEY,
+    job_id      TEXT NOT NULL REFERENCES jobs(id),
+    type        TEXT NOT NULL,
+    sent_at     TEXT NOT NULL,
+    UNIQUE(job_id, type)
+);
+
 CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs(company);
 CREATE INDEX IF NOT EXISTS idx_jobs_discovered ON jobs(discovered_at);
 CREATE INDEX IF NOT EXISTS idx_match_scores_job ON match_scores(job_id);
 CREATE INDEX IF NOT EXISTS idx_match_scores_overall ON match_scores(overall_score);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_job ON applications(job_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_job ON notifications(job_id);
 """
 
 
@@ -99,6 +108,11 @@ class Database:
 
     def close(self) -> None:
         if self._conn:
+            # Checkpoint WAL so the DB is a single file for artifact upload
+            try:
+                self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            except Exception:
+                pass
             self._conn.close()
             self._conn = None
 
@@ -196,7 +210,7 @@ class Database:
         return results
 
     def get_jobs_needing_notification(self, min_score: int) -> list[tuple[Job, MatchScore]]:
-        """Get scored jobs that aren't auto-apply and haven't been notified about."""
+        """Get scored jobs that haven't been notified about yet."""
         rows = self.conn.execute(
             """SELECT j.*, ms.id as ms_id, ms.overall_score, ms.skill_score,
                       ms.experience_score, ms.seniority_score, ms.reasoning,
@@ -205,8 +219,7 @@ class Database:
                JOIN match_scores ms ON j.id = ms.job_id
                LEFT JOIN applications a ON j.id = a.job_id
                WHERE ms.overall_score >= ?
-                 AND j.ats_type NOT IN ('greenhouse', 'lever', 'workday', 'unknown')
-                 AND (a.id IS NULL OR a.status = 'manual_needed')
+                 AND a.id IS NULL
                ORDER BY ms.overall_score DESC""",
             (min_score,),
         ).fetchall()
@@ -295,6 +308,33 @@ class Database:
                ORDER BY a.created_at DESC"""
         ).fetchall()
         return [dict(r) for r in rows]
+
+    # ── Notifications ─────────────────────────────────────────────────
+
+    def mark_notified(self, job_id: str, notification_type: str) -> None:
+        """Mark a job as notified to prevent duplicate emails."""
+        try:
+            self.conn.execute(
+                """INSERT INTO notifications (id, job_id, type, sent_at)
+                   VALUES (?, ?, ?, ?)""",
+                (
+                    str(uuid.uuid4()),
+                    job_id,
+                    notification_type,
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError:
+            pass  # Already notified
+
+    def is_notified(self, job_id: str, notification_type: str) -> bool:
+        """Check if a job has already been notified about."""
+        row = self.conn.execute(
+            "SELECT 1 FROM notifications WHERE job_id=? AND type=?",
+            (job_id, notification_type),
+        ).fetchone()
+        return row is not None
 
     # ── Stats ────────────────────────────────────────────────────────
 

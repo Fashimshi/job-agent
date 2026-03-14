@@ -99,6 +99,7 @@ class Pipeline:
         # Step 4: Triage and act
         applied_count = 0
         manual_count = 0
+        applied_jobs: list[tuple[Job, MatchScore]] = []
 
         # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
         auto_candidates = self.db.get_auto_apply_candidates(
@@ -115,6 +116,7 @@ class Pipeline:
             result = await self.apply_to_job(job, score, dry_run)
             if result:
                 applied_count += 1
+                applied_jobs.append((job, score))
             else:
                 # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
                 failed_auto.append((job, score))
@@ -132,12 +134,21 @@ class Pipeline:
         for job, score in manual_candidates:
             if self.registry.is_excluded_from_apply(job.company):
                 continue
+            if self.db.is_notified(job.id, "manual_needed"):
+                continue
             await self.prepare_manual_application(job, score)
+            self.db.mark_notified(job.id, "manual_needed")
             manual_count += 1
 
         # Step 5: Notify digest
+        # Collect all qualifying jobs (scored >= notify threshold) for the digest
+        all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
         stats = self.db.get_stats()
-        self.notifier.notify_digest(stats, len(new_jobs), applied_count, manual_count)
+        self.notifier.notify_digest(
+            stats, len(new_jobs), applied_count, manual_count,
+            qualified_jobs=all_qualified,
+            applied_jobs=applied_jobs,
+        )
 
         # Show summary table
         all_scored = self.db.get_jobs_by_score(self.settings.matching.min_score_log)
@@ -318,6 +329,7 @@ class Pipeline:
 
         if result.success:
             self.notifier.notify_auto_applied(job, score, result.screenshot_path)
+            self.db.mark_notified(job.id, "auto_applied")
 
         return result.success
 

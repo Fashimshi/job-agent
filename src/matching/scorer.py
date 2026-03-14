@@ -88,15 +88,7 @@ class JobScorer:
             )
         except Exception as e:
             logger.error(f"Failed to score job {job.title} at {job.company}: {e}")
-            return MatchScore(
-                job_id=job.id,
-                overall_score=0,
-                skill_score=0,
-                experience_score=0,
-                seniority_score=0,
-                reasoning=f"Scoring failed: {e}",
-                model_used="error",
-            )
+            raise  # Let asyncio.gather capture it; don't insert a 0-score
 
     @staticmethod
     def _extract_json(text: str) -> dict:

@@ -44,5 +44,32 @@ jobs:
       - name: Create data directory
         run: mkdir -p data/screenshots
 
+      - name: Restore database from previous run
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          name: job-agent-db
+          path: data/
+          search_artifacts: true
+          if_no_artifact_found: warn
+        continue-on-error: true
+
       - name: Run job agent
         run: python -m src.cli run --no-dry-run --yes
+
+      - name: Save database for next run
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: job-agent-db
+          path: data/jobs.db
+          retention-days: 90
+          overwrite: true
+
+      - name: Save screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: job-agent-screenshots-${{ github.run_number }}
+          path: data/screenshots/
+          retention-days: 30
+          if-no-files-found: ignore
