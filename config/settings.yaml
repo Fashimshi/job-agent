@@ -14,13 +14,13 @@ applicant:
 
 discovery:
   queries:
-    - "Senior Data Scientist"
-    - "Senior Machine Learning Engineer"
-    - "Senior ML Engineer"
-    - "Senior NLP Engineer"
-    - "Senior Applied Scientist"
-    - "Staff Data Scientist"
-    - "Staff Machine Learning Engineer"
+    - "Data Scientist"
+    - "Machine Learning Engineer"
+    - "ML Engineer"
+    - "NLP Engineer"
+    - "Applied Scientist"
+    - "AI Engineer"
+    - "LLM Engineer"
   location: "United States"
   posted_within_days: 3
   remote_ok: true
@@ -42,10 +42,7 @@ application:
   screenshot_dir: "./data/screenshots"
 
 seniority:
-  include:
-    - "senior"
-    - "staff"
-    - "lead"
+  include: []  # No seniority requirement — any level passes (except excluded)
   exclude:
     - "intern"
     - "junior"

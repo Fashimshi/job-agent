@@ -168,36 +168,42 @@ class Pipeline:
         }
 
     async def discover(self) -> list[Job]:
-        """Run job discovery from all configured sources."""
-        sources = []
+        """Run job discovery. LinkedIn is the primary source; others are fallbacks."""
+        # Primary source: LinkedIn (broadest coverage, real job URLs)
+        primary = [LinkedInSource(max_results_per_query=100)]
 
-        # LinkedIn — primary source (no API key needed, real job URLs)
-        sources.append(LinkedInSource(max_results_per_query=50))
-
-        # Greenhouse — direct ATS API (auto-apply capable)
+        # Fallback sources: ATS APIs and SerpAPI
+        fallbacks = []
         gh_tokens = self.registry.get_greenhouse_tokens()
         if gh_tokens:
-            sources.append(GreenhouseSource(gh_tokens, self.settings.role_keywords))
-
-        # Lever — direct ATS API (auto-apply capable)
+            fallbacks.append(GreenhouseSource(gh_tokens, self.settings.role_keywords))
         lever_slugs = self.registry.get_lever_slugs()
         if lever_slugs:
-            sources.append(LeverSource(lever_slugs, self.settings.role_keywords))
-
-        # SerpAPI — backup for broader coverage
+            fallbacks.append(LeverSource(lever_slugs, self.settings.role_keywords))
         if self.settings.serpapi_key:
-            sources.append(SerpAPISource(self.settings.serpapi_key))
+            fallbacks.append(SerpAPISource(self.settings.serpapi_key))
 
-        if not sources:
-            logger.warning("No discovery sources configured!")
-            return []
-
-        orchestrator = DiscoveryOrchestrator(sources, self.db)
-        return await orchestrator.run_discovery(
+        # Run LinkedIn first as primary
+        orchestrator = DiscoveryOrchestrator(primary, self.db)
+        primary_jobs = await orchestrator.run_discovery(
             queries=self.settings.discovery.queries,
             location=self.settings.discovery.location,
             posted_within_days=self.settings.discovery.posted_within_days,
         )
+        logger.info(f"  LinkedIn (primary): {len(primary_jobs)} new jobs")
+
+        # Run fallback sources for additional coverage
+        fallback_jobs: list[Job] = []
+        if fallbacks:
+            fallback_orchestrator = DiscoveryOrchestrator(fallbacks, self.db)
+            fallback_jobs = await fallback_orchestrator.run_discovery(
+                queries=self.settings.discovery.queries,
+                location=self.settings.discovery.location,
+                posted_within_days=self.settings.discovery.posted_within_days,
+            )
+            logger.info(f"  Fallbacks (Greenhouse/Lever/SerpAPI): {len(fallback_jobs)} new jobs")
+
+        return primary_jobs + fallback_jobs
 
     async def score(self, jobs: list[Job], max_workers: int = 10) -> list[tuple[Job, MatchScore]]:
         """Score a list of jobs using LLM with parallel workers."""
