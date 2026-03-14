@@ -142,6 +142,9 @@ class GreenhouseApplicant(BaseApplicant):
         # Work authorization — look for select dropdowns or radio buttons
         await self._handle_authorization(page)
 
+        # Handle common custom required fields (dropdowns & text)
+        await self._handle_custom_fields(page)
+
     async def _handle_authorization(self, page: Page) -> None:
         """Handle work authorization questions."""
         # Look for work authorization select/dropdown
@@ -161,6 +164,130 @@ class GreenhouseApplicant(BaseApplicant):
                         await select.first.select_option(value="Yes")
                     except Exception:
                         pass
+
+    async def _handle_custom_fields(self, page: Page) -> None:
+        """Handle common custom Greenhouse fields that cause validation errors."""
+
+        # Fill all visible required select dropdowns that are still on default
+        selects = page.locator("select:visible")
+        count = await selects.count()
+        for i in range(count):
+            select = selects.nth(i)
+            try:
+                # Skip if already has a value selected (not the blank default)
+                current = await select.input_value(timeout=2000)
+                if current:
+                    continue
+
+                # Get available options
+                options = select.locator("option")
+                opt_count = await options.count()
+                if opt_count <= 1:
+                    continue
+
+                # Try to pick a sensible option based on the field label
+                label_el = page.locator(f'label[for="{await select.get_attribute("id")}"]')
+                label_text = ""
+                if await label_el.count() > 0:
+                    label_text = (await label_el.first.text_content() or "").lower()
+
+                # Sponsorship questions — answer based on applicant info
+                if "sponsor" in label_text:
+                    target = "Yes" if self.info.sponsorship_needed else "No"
+                    try:
+                        await select.select_option(label=target, timeout=2000)
+                        continue
+                    except Exception:
+                        pass
+
+                # Authorization questions
+                if "authorized" in label_text or "authorization" in label_text or "eligible" in label_text:
+                    try:
+                        await select.select_option(label="Yes", timeout=2000)
+                        continue
+                    except Exception:
+                        pass
+
+                # "How did you hear about us" — pick first non-empty option
+                if "hear" in label_text or "source" in label_text or "how did" in label_text:
+                    for j in range(1, opt_count):
+                        opt_val = await options.nth(j).get_attribute("value")
+                        if opt_val:
+                            await select.select_option(index=j, timeout=2000)
+                            break
+                    continue
+
+                # Gender / Race / Veteran / Disability EEO fields — pick "Decline" or last option
+                if any(w in label_text for w in ["gender", "race", "ethnicity", "veteran", "disability", "demographic"]):
+                    # Try to find "decline" or "prefer not" option
+                    for j in range(opt_count):
+                        opt_text = (await options.nth(j).text_content() or "").lower()
+                        if "decline" in opt_text or "prefer not" in opt_text or "not disclose" in opt_text:
+                            await select.select_option(index=j, timeout=2000)
+                            break
+                    continue
+
+                # For any other required dropdown, select the first non-empty option
+                for j in range(1, opt_count):
+                    opt_val = await options.nth(j).get_attribute("value")
+                    if opt_val:
+                        await select.select_option(index=j, timeout=2000)
+                        break
+
+            except Exception:
+                continue
+
+        # Fill empty required text inputs that we haven't already filled
+        filled_ids = {"first_name", "last_name", "email", "phone"}
+        inputs = page.locator('input[type="text"]:visible, input:not([type]):visible')
+        input_count = await inputs.count()
+        for i in range(input_count):
+            inp = inputs.nth(i)
+            try:
+                inp_id = await inp.get_attribute("id") or ""
+                inp_name = await inp.get_attribute("name") or ""
+                if inp_id in filled_ids:
+                    continue
+
+                # Skip if already has a value
+                current = await inp.input_value(timeout=2000)
+                if current:
+                    continue
+
+                # Check if required
+                required = await inp.get_attribute("required")
+                aria_required = await inp.get_attribute("aria-required")
+                if required is None and aria_required != "true":
+                    continue
+
+                # Try to infer the right value from field name/label
+                label_el = page.locator(f'label[for="{inp_id}"]')
+                label_text = ""
+                if await label_el.count() > 0:
+                    label_text = (await label_el.first.text_content() or "").lower()
+
+                field_key = (inp_id + inp_name + label_text).lower()
+
+                if "company" in field_key or "employer" in field_key:
+                    await inp.fill(self.info.current_company or "Walmart Global Tech", timeout=2000)
+                elif "city" in field_key:
+                    await inp.fill("Sunnyvale", timeout=2000)
+                elif "state" in field_key:
+                    await inp.fill("CA", timeout=2000)
+                elif "country" in field_key:
+                    await inp.fill("United States", timeout=2000)
+                elif "salary" in field_key or "compensation" in field_key:
+                    await inp.fill("Open to discuss", timeout=2000)
+                elif "year" in field_key and "experience" in field_key:
+                    await inp.fill("5", timeout=2000)
+                elif "github" in field_key:
+                    if self.info.github_url:
+                        await inp.fill(self.info.github_url, timeout=2000)
+                elif "portfolio" in field_key or "website" in field_key:
+                    if self.info.portfolio_url:
+                        await inp.fill(self.info.portfolio_url, timeout=2000)
+            except Exception:
+                continue
 
     async def _submit(self, page: Page) -> None:
         """Submit the application form and verify it went through."""
