@@ -365,7 +365,9 @@ class WorkdayApplicant(BaseApplicant):
                     await radio.click()
 
     async def _final_submit(self, page: Page) -> None:
-        """Click the final submit button."""
+        """Click the final submit button and verify it went through."""
+        pre_url = page.url
+
         # Try review first
         review = page.locator(SEL["review_btn"]).first
         if await review.count() > 0:
@@ -377,6 +379,46 @@ class WorkdayApplicant(BaseApplicant):
         if await submit.count() > 0:
             await submit.click()
             await page.wait_for_timeout(5000)
-            logger.info("Clicked submit — waiting for confirmation")
         else:
             raise RuntimeError("Could not find submit button on Workday form")
+
+        # 1. URL change — Workday redirects on success
+        if page.url != pre_url:
+            logger.info("Confirmed: URL changed after submit (redirected)")
+            return
+
+        # 2. Confirmation text on the page
+        page_text = (await page.text_content("body") or "").lower()
+        confirmation_phrases = [
+            "thank you", "application has been",
+            "successfully submitted", "received your application",
+            "thanks for applying", "application received",
+            "thanks for your interest", "application is submitted",
+        ]
+        if any(phrase in page_text for phrase in confirmation_phrases):
+            logger.info("Confirmed: application accepted (confirmation text found)")
+            return
+
+        # 3. Visible validation errors — Workday error selectors
+        error_msgs = page.locator(
+            '[data-automation-id="errorMessage"]:visible, '
+            '.css-1blqw1b:visible, '
+            '[data-automation-id="formErrorBanner"]:visible, '
+            '[role="alert"]:visible'
+        )
+        if await error_msgs.count() > 0:
+            error_texts = []
+            for i in range(min(await error_msgs.count(), 3)):
+                txt = await error_msgs.nth(i).text_content()
+                if txt and txt.strip():
+                    error_texts.append(txt.strip())
+            if error_texts:
+                raise RuntimeError(
+                    f"Form has validation errors: {'; '.join(error_texts)}"
+                )
+
+        # No confirmation and no errors — cannot confirm submission
+        raise RuntimeError(
+            "Submit clicked but no confirmation detected — "
+            "application may not have gone through"
+        )

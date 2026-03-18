@@ -206,7 +206,9 @@ class LeverApplicant(BaseApplicant):
                         pass
 
     async def _submit(self, page: Page) -> None:
-        """Submit the Lever application form."""
+        """Submit the Lever application form and verify it went through."""
+        pre_url = page.url
+
         submit_btn = page.locator(
             'button[type="submit"], '
             'button:has-text("Submit application"), '
@@ -214,8 +216,49 @@ class LeverApplicant(BaseApplicant):
             'button:has-text("Apply")'
         ).first
 
-        if await submit_btn.count() > 0:
-            await submit_btn.click()
-            await page.wait_for_timeout(3000)
-        else:
+        if await submit_btn.count() == 0:
             raise RuntimeError("Could not find submit button")
+
+        await submit_btn.click()
+        await page.wait_for_timeout(5000)
+
+        # 1. URL change — Lever redirects to a thank-you page on success
+        if page.url != pre_url:
+            logger.info("Confirmed: URL changed after submit (redirected)")
+            return
+
+        # 2. Confirmation text on the page
+        page_text = (await page.text_content("body") or "").lower()
+        confirmation_phrases = [
+            "thank you", "application has been",
+            "successfully submitted", "received your application",
+            "thanks for applying", "application received",
+            "thanks for your interest",
+        ]
+        if any(phrase in page_text for phrase in confirmation_phrases):
+            logger.info("Confirmed: application accepted (confirmation text found)")
+            return
+
+        # 3. Visible validation errors — Lever uses .application-error, .error classes
+        error_msgs = page.locator(
+            '.application-error:visible, '
+            '.error:visible, '
+            '.error-message:visible, '
+            '[class*="error"]:visible:not(script):not(style)'
+        )
+        if await error_msgs.count() > 0:
+            error_texts = []
+            for i in range(min(await error_msgs.count(), 3)):
+                txt = await error_msgs.nth(i).text_content()
+                if txt and txt.strip():
+                    error_texts.append(txt.strip())
+            if error_texts:
+                raise RuntimeError(
+                    f"Form has validation errors: {'; '.join(error_texts)}"
+                )
+
+        # No confirmation and no errors — cannot confirm submission
+        raise RuntimeError(
+            "Submit clicked but no confirmation detected — "
+            "application may not have gone through"
+        )

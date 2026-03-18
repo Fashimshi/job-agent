@@ -347,8 +347,10 @@ class GreenhouseApplicant(BaseApplicant):
                             f"Form has validation errors: {'; '.join(error_texts)}"
                         )
 
-                # No errors detected, no confirmation — assume it went through
-                logger.info("Submit clicked — no errors detected, likely succeeded")
-                return
+                # No errors detected, no confirmation — cannot confirm
+                raise RuntimeError(
+                    "Submit clicked but no confirmation detected — "
+                    "application may not have gone through"
+                )
 
         raise RuntimeError("Could not find submit button")
