@@ -100,47 +100,58 @@ class Pipeline:
         applied_count = 0
         manual_count = 0
         applied_jobs: list[tuple[Job, MatchScore]] = []
-
-        # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
-        auto_candidates = self.db.get_auto_apply_candidates(
-            self.settings.matching.min_score_auto_apply
-        )
         failed_auto = []  # Jobs that couldn't auto-apply → fall through to manual
-        for job, score in auto_candidates:
-            if self.registry.is_excluded_from_apply(job.company):
-                continue
-            if self.db.get_today_application_count() >= self.settings.application.max_per_day:
-                logger.warning("Daily application limit reached")
-                break
 
-            result = await self.apply_to_job(job, score, dry_run)
-            if result:
-                applied_count += 1
-                applied_jobs.append((job, score))
-            else:
-                # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
-                failed_auto.append((job, score))
+        try:
+            # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
+            auto_candidates = self.db.get_auto_apply_candidates(
+                self.settings.matching.min_score_auto_apply
+            )
+            for job, score in auto_candidates:
+                if self.registry.is_excluded_from_apply(job.company):
+                    continue
+                if self.db.get_today_application_count() >= self.settings.application.max_per_day:
+                    logger.warning("Daily application limit reached")
+                    break
 
-        # Manual notification: scored >= notify threshold + failed auto-apply jobs
-        manual_candidates = self.db.get_jobs_needing_notification(
-            self.settings.matching.min_score_notify
-        )
-        # Merge failed auto-apply into manual list (avoid duplicates)
-        manual_job_ids = {j.id for j, _ in manual_candidates}
-        for job, score in failed_auto:
-            if job.id not in manual_job_ids:
-                manual_candidates.append((job, score))
+                try:
+                    result = await self.apply_to_job(job, score, dry_run)
+                    if result:
+                        applied_count += 1
+                        applied_jobs.append((job, score))
+                    else:
+                        # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
+                        failed_auto.append((job, score))
+                except Exception as e:
+                    logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
+                    failed_auto.append((job, score))
 
-        for job, score in manual_candidates:
-            if self.registry.is_excluded_from_apply(job.company):
-                continue
-            if self.db.is_notified(job.id, "manual_needed"):
-                continue
-            await self.prepare_manual_application(job, score)
-            self.db.mark_notified(job.id, "manual_needed")
-            manual_count += 1
+            # Manual notification: scored >= notify threshold + failed auto-apply jobs
+            manual_candidates = self.db.get_jobs_needing_notification(
+                self.settings.matching.min_score_notify
+            )
+            # Merge failed auto-apply into manual list (avoid duplicates)
+            manual_job_ids = {j.id for j, _ in manual_candidates}
+            for job, score in failed_auto:
+                if job.id not in manual_job_ids:
+                    manual_candidates.append((job, score))
 
-        # Step 5: Notify digest
+            for job, score in manual_candidates:
+                if self.registry.is_excluded_from_apply(job.company):
+                    continue
+                if self.db.is_notified(job.id, "manual_needed"):
+                    continue
+                try:
+                    await self.prepare_manual_application(job, score)
+                    self.db.mark_notified(job.id, "manual_needed")
+                    manual_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
+
+        except Exception as e:
+            logger.error(f"Error during triage step: {e}")
+
+        # Step 5: Notify digest — ALWAYS runs, even if steps above crashed
         # Collect all qualifying jobs (scored >= notify threshold) for the digest
         all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
         stats = self.db.get_stats()
