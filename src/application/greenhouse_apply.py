@@ -293,6 +293,9 @@ class GreenhouseApplicant(BaseApplicant):
         """Submit the application form and verify it went through."""
         pre_url = page.url
 
+        # Capture page text BEFORE submit so we can detect NEW confirmation text
+        pre_text = (await page.text_content("body") or "").lower()
+
         # Try multiple selectors in order of specificity
         selectors = [
             '#submit_app',
@@ -315,17 +318,30 @@ class GreenhouseApplicant(BaseApplicant):
                     logger.info("Confirmed: URL changed after submit (redirected)")
                     return
 
-                # Check for confirmation text on the same page
-                page_text = await page.text_content("body") or ""
-                page_text_lower = page_text.lower()
+                # Check for confirmation text that appeared AFTER submit
+                # (ignore text that was already on the page before clicking)
+                post_text = (await page.text_content("body") or "").lower()
 
                 confirmation_phrases = [
-                    "thank you", "application has been",
+                    "application has been submitted",
                     "successfully submitted", "received your application",
                     "thanks for applying", "application received",
+                    "your application has been", "thanks for your interest",
                 ]
-                if any(phrase in page_text_lower for phrase in confirmation_phrases):
-                    logger.info("Confirmed: application accepted")
+                for phrase in confirmation_phrases:
+                    if phrase in post_text and phrase not in pre_text:
+                        logger.info(f"Confirmed: new confirmation text appeared: '{phrase}'")
+                        return
+
+                # Also check Greenhouse-specific confirmation container
+                # (these only appear after successful submit)
+                confirmation = page.locator(
+                    '#application_confirmation, '
+                    '.application-confirmation, '
+                    '[data-source="greenhouse"] .confirmation'
+                )
+                if await confirmation.count() > 0:
+                    logger.info("Confirmed: Greenhouse confirmation element appeared")
                     return
 
                 # Check for visible validation errors (red highlighted fields)

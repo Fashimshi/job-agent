@@ -368,6 +368,9 @@ class WorkdayApplicant(BaseApplicant):
         """Click the final submit button and verify it went through."""
         pre_url = page.url
 
+        # Capture page text BEFORE submit so we can detect NEW confirmation text
+        pre_text = (await page.text_content("body") or "").lower()
+
         # Try review first
         review = page.locator(SEL["review_btn"]).first
         if await review.count() > 0:
@@ -387,17 +390,20 @@ class WorkdayApplicant(BaseApplicant):
             logger.info("Confirmed: URL changed after submit (redirected)")
             return
 
-        # 2. Confirmation text on the page
-        page_text = (await page.text_content("body") or "").lower()
+        # 2. Confirmation text that appeared AFTER submit
+        # (ignore text already on the page before clicking)
+        post_text = (await page.text_content("body") or "").lower()
         confirmation_phrases = [
-            "thank you", "application has been",
+            "application has been submitted",
             "successfully submitted", "received your application",
             "thanks for applying", "application received",
             "thanks for your interest", "application is submitted",
+            "your application has been",
         ]
-        if any(phrase in page_text for phrase in confirmation_phrases):
-            logger.info("Confirmed: application accepted (confirmation text found)")
-            return
+        for phrase in confirmation_phrases:
+            if phrase in post_text and phrase not in pre_text:
+                logger.info(f"Confirmed: new confirmation text appeared: '{phrase}'")
+                return
 
         # 3. Visible validation errors — Workday error selectors
         error_msgs = page.locator(

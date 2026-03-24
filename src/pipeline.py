@@ -83,88 +83,102 @@ class Pipeline:
         logger.info("STARTING JOB AGENT PIPELINE")
         logger.info("=" * 60)
 
-        # Step 1: Discover
-        new_jobs = await self.discover()
-        logger.info(f"Step 1 DISCOVER: {len(new_jobs)} new jobs found")
-
-        # Step 2: Filter
-        unscored = self.db.get_unscored_jobs()
-        filtered = self.filter.apply_all(unscored)
-        logger.info(f"Step 2 FILTER: {len(filtered)}/{len(unscored)} passed filters")
-
-        # Step 3: Score
-        scored = await self.score(filtered)
-        logger.info(f"Step 3 SCORE: {len(scored)} jobs scored")
-
-        # Step 4: Triage and act
+        new_jobs: list = []
+        filtered: list = []
+        scored: list = []
         applied_count = 0
         manual_count = 0
         applied_jobs: list[tuple[Job, MatchScore]] = []
-        failed_auto = []  # Jobs that couldn't auto-apply → fall through to manual
 
         try:
-            # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
-            auto_candidates = self.db.get_auto_apply_candidates(
-                self.settings.matching.min_score_auto_apply
-            )
-            for job, score in auto_candidates:
-                if self.registry.is_excluded_from_apply(job.company):
-                    continue
-                if self.db.get_today_application_count() >= self.settings.application.max_per_day:
-                    logger.warning("Daily application limit reached")
-                    break
+            # Step 1: Discover
+            new_jobs = await self.discover()
+            logger.info(f"Step 1 DISCOVER: {len(new_jobs)} new jobs found")
 
-                try:
-                    result = await self.apply_to_job(job, score, dry_run)
-                    if result:
-                        applied_count += 1
-                        applied_jobs.append((job, score))
-                    else:
-                        # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
+            # Step 2: Filter
+            unscored = self.db.get_unscored_jobs()
+            filtered = self.filter.apply_all(unscored)
+            logger.info(f"Step 2 FILTER: {len(filtered)}/{len(unscored)} passed filters")
+
+            # Step 3: Score
+            scored = await self.score(filtered)
+            logger.info(f"Step 3 SCORE: {len(scored)} jobs scored")
+
+            # Step 4: Triage and act
+            failed_auto = []  # Jobs that couldn't auto-apply → fall through to manual
+
+            try:
+                # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
+                auto_candidates = self.db.get_auto_apply_candidates(
+                    self.settings.matching.min_score_auto_apply
+                )
+                for job, score in auto_candidates:
+                    if self.registry.is_excluded_from_apply(job.company):
+                        continue
+                    if self.db.get_today_application_count() >= self.settings.application.max_per_day:
+                        logger.warning("Daily application limit reached")
+                        break
+
+                    try:
+                        result = await self.apply_to_job(job, score, dry_run)
+                        if result:
+                            applied_count += 1
+                            applied_jobs.append((job, score))
+                        else:
+                            # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
+                            failed_auto.append((job, score))
+                    except Exception as e:
+                        logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
                         failed_auto.append((job, score))
-                except Exception as e:
-                    logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
-                    failed_auto.append((job, score))
 
-            # Manual notification: scored >= notify threshold + failed auto-apply jobs
-            manual_candidates = self.db.get_jobs_needing_notification(
-                self.settings.matching.min_score_notify
-            )
-            # Merge failed auto-apply into manual list (avoid duplicates)
-            manual_job_ids = {j.id for j, _ in manual_candidates}
-            for job, score in failed_auto:
-                if job.id not in manual_job_ids:
-                    manual_candidates.append((job, score))
+                # Manual notification: scored >= notify threshold + failed auto-apply jobs
+                manual_candidates = self.db.get_jobs_needing_notification(
+                    self.settings.matching.min_score_notify
+                )
+                # Merge failed auto-apply into manual list (avoid duplicates)
+                manual_job_ids = {j.id for j, _ in manual_candidates}
+                for job, score in failed_auto:
+                    if job.id not in manual_job_ids:
+                        manual_candidates.append((job, score))
 
-            for job, score in manual_candidates:
-                if self.registry.is_excluded_from_apply(job.company):
-                    continue
-                if self.db.is_notified(job.id, "manual_needed"):
-                    continue
-                try:
-                    await self.prepare_manual_application(job, score)
-                    self.db.mark_notified(job.id, "manual_needed")
-                    manual_count += 1
-                except Exception as e:
-                    logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
+                for job, score in manual_candidates:
+                    if self.registry.is_excluded_from_apply(job.company):
+                        continue
+                    if self.db.is_notified(job.id, "manual_needed"):
+                        continue
+                    try:
+                        await self.prepare_manual_application(job, score)
+                        self.db.mark_notified(job.id, "manual_needed")
+                        manual_count += 1
+                    except Exception as e:
+                        logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
+
+            except Exception as e:
+                logger.error(f"Error during triage step: {e}")
 
         except Exception as e:
-            logger.error(f"Error during triage step: {e}")
+            logger.error(f"Pipeline error in discovery/filter/score: {e}")
 
-        # Step 5: Notify digest — ALWAYS runs, even if steps above crashed
-        # Collect all qualifying jobs (scored >= notify threshold) for the digest
-        all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
-        stats = self.db.get_stats()
-        self.notifier.notify_digest(
-            stats, len(new_jobs), applied_count, manual_count,
-            qualified_jobs=all_qualified,
-            applied_jobs=applied_jobs,
-        )
+        finally:
+            # Step 5: Notify digest — ALWAYS runs, even if ANY step above crashed
+            try:
+                all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
+                stats = self.db.get_stats()
+                self.notifier.notify_digest(
+                    stats, len(new_jobs), applied_count, manual_count,
+                    qualified_jobs=all_qualified,
+                    applied_jobs=applied_jobs,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send digest email: {e}")
 
         # Show summary table
-        all_scored = self.db.get_jobs_by_score(self.settings.matching.min_score_log)
-        if all_scored:
-            self.notifier.print_job_table(all_scored[:20])
+        try:
+            all_scored = self.db.get_jobs_by_score(self.settings.matching.min_score_log)
+            if all_scored:
+                self.notifier.print_job_table(all_scored[:20])
+        except Exception:
+            pass
 
         logger.info("=" * 60)
         logger.info("PIPELINE COMPLETE")
