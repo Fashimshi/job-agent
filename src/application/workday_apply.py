@@ -385,21 +385,32 @@ class WorkdayApplicant(BaseApplicant):
         else:
             raise RuntimeError("Could not find submit button on Workday form")
 
-        # 1. URL change — Workday redirects on success
-        if page.url != pre_url:
-            logger.info("Confirmed: URL changed after submit (redirected)")
-            return
-
-        # 2. Confirmation text that appeared AFTER submit
-        # (ignore text already on the page before clicking)
+        # Get page state after submit
         post_text = (await page.text_content("body") or "").lower()
+
         confirmation_phrases = [
             "application has been submitted",
             "successfully submitted", "received your application",
             "thanks for applying", "application received",
-            "thanks for your interest", "application is submitted",
+            "application is submitted",
             "your application has been",
         ]
+
+        # 1. URL change — Workday redirects on success.
+        # But verify the new page actually has confirmation content.
+        if page.url != pre_url:
+            for phrase in confirmation_phrases:
+                if phrase in post_text:
+                    logger.info(f"Confirmed: URL changed and confirmation text found: '{phrase}'")
+                    return
+            # URL changed but no confirmation content — not reliable
+            logger.warning(f"URL changed ({pre_url} -> {page.url}) but no confirmation text found")
+            raise RuntimeError(
+                "Submit clicked and URL changed, but no confirmation detected on "
+                "the new page — may have redirected to login or error page"
+            )
+
+        # 2. Same-page confirmation text that appeared AFTER submit
         for phrase in confirmation_phrases:
             if phrase in post_text and phrase not in pre_text:
                 logger.info(f"Confirmed: new confirmation text appeared: '{phrase}'")

@@ -296,15 +296,14 @@ class GreenhouseApplicant(BaseApplicant):
         # Capture page text BEFORE submit so we can detect NEW confirmation text
         pre_text = (await page.text_content("body") or "").lower()
 
-        # Try multiple selectors in order of specificity
+        # Try multiple selectors in order of specificity (avoid overly broad
+        # selectors like "Apply" which can match "Apply with LinkedIn" etc.)
         selectors = [
             '#submit_app',
             'button[type="submit"]',
             'input[type="submit"]',
             'button:has-text("Submit Application")',
             'button:has-text("Submit")',
-            'button:has-text("Apply")',
-            'a:has-text("Submit")',
         ]
         for selector in selectors:
             btn = page.locator(selector).first
@@ -312,29 +311,46 @@ class GreenhouseApplicant(BaseApplicant):
                 await btn.click()
                 await page.wait_for_timeout(5000)
 
-                # If URL changed after submit, Greenhouse redirected to
-                # a thank-you page — application went through
-                if page.url != pre_url:
-                    logger.info("Confirmed: URL changed after submit (redirected)")
-                    return
-
-                # Check for confirmation text that appeared AFTER submit
-                # (ignore text that was already on the page before clicking)
+                # Get page state after submit
                 post_text = (await page.text_content("body") or "").lower()
 
                 confirmation_phrases = [
                     "application has been submitted",
                     "successfully submitted", "received your application",
                     "thanks for applying", "application received",
-                    "your application has been", "thanks for your interest",
+                    "your application has been",
                 ]
+
+                # If URL changed, verify the NEW page actually looks like a
+                # confirmation (not a login redirect, error page, etc.)
+                if page.url != pre_url:
+                    for phrase in confirmation_phrases:
+                        if phrase in post_text:
+                            logger.info(f"Confirmed: URL changed and confirmation text found: '{phrase}'")
+                            return
+                    # Also accept Greenhouse confirmation element on new page
+                    confirmation = page.locator(
+                        '#application_confirmation, '
+                        '.application-confirmation, '
+                        '[data-source="greenhouse"] .confirmation'
+                    )
+                    if await confirmation.count() > 0:
+                        logger.info("Confirmed: URL changed and Greenhouse confirmation element found")
+                        return
+                    # URL changed but no confirmation content — not reliable
+                    logger.warning(f"URL changed ({pre_url} -> {page.url}) but no confirmation text found")
+                    raise RuntimeError(
+                        "Submit clicked and URL changed, but no confirmation detected on "
+                        "the new page — may have redirected to login or error page"
+                    )
+
+                # Same-page confirmation: text that appeared AFTER submit
                 for phrase in confirmation_phrases:
                     if phrase in post_text and phrase not in pre_text:
                         logger.info(f"Confirmed: new confirmation text appeared: '{phrase}'")
                         return
 
                 # Also check Greenhouse-specific confirmation container
-                # (these only appear after successful submit)
                 confirmation = page.locator(
                     '#application_confirmation, '
                     '.application-confirmation, '
@@ -345,7 +361,6 @@ class GreenhouseApplicant(BaseApplicant):
                     return
 
                 # Check for visible validation errors (red highlighted fields)
-                # Use specific Greenhouse error selectors, only visible ones
                 error_msgs = page.locator(
                     '.field-error:visible, '
                     '.field_with_errors:visible, '

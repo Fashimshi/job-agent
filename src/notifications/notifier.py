@@ -16,6 +16,13 @@ from src.tracking.models import Job, MatchScore
 TIER_LABELS = {1: "FAANG", 2: "Big Tech", 3: "Mid Tech", 4: "Finance", 5: "Other"}
 TIER_COLORS = {1: "#22c55e", 2: "#4ade80", 3: "#06b6d4", 4: "#3b82f6", 5: "#9ca3af"}
 
+
+def _esc(text: str | None) -> str:
+    """HTML-escape user-generated text to prevent malformed email HTML."""
+    if not text:
+        return ""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
 if TYPE_CHECKING:
     from src.config_loader import Settings
 
@@ -104,9 +111,13 @@ class Notifier:
         if "console" in self.channels:
             console.print(Panel(msg, title="[bold blue]Daily Digest[/bold blue]", border_style="blue"))
         if "email" in self.channels:
-            html = self._render_digest_email(
-                stats, new_jobs, applied, manual, qualified_jobs, applied_jobs
-            )
+            html = None
+            try:
+                html = self._render_digest_email(
+                    stats, new_jobs, applied, manual, qualified_jobs, applied_jobs
+                )
+            except Exception as e:
+                logger.error(f"Failed to render digest HTML, sending plain text: {e}")
             self._send_email("Job Agent Daily Digest", msg, html)
 
     def print_job_table(self, jobs_with_scores: list[tuple[Job, MatchScore]]) -> None:
@@ -163,9 +174,9 @@ class Notifier:
             <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 12px 8px; font-size: 20px; font-weight: bold; color: {score_color};">{score.overall_score}</td>
                 <td style="padding: 12px 8px;">
-                    <div style="font-weight: 600; color: #111827;">{job.title}</div>
-                    <div style="color: #6b7280; font-size: 13px;">{job.company} &middot; <span style="color: {tier_color};">{tier_label}</span></div>
-                    <div style="color: #9ca3af; font-size: 12px;">{job.location or 'Remote/Unknown'}</div>
+                    <div style="font-weight: 600; color: #111827;">{_esc(job.title)}</div>
+                    <div style="color: #6b7280; font-size: 13px;">{_esc(job.company)} &middot; <span style="color: {tier_color};">{tier_label}</span></div>
+                    <div style="color: #9ca3af; font-size: 12px;">{_esc(job.location) or 'Remote/Unknown'}</div>
                 </td>
                 <td style="padding: 12px 8px; text-align: center;">
                     <a href="{apply_url}" style="display: inline-block; padding: 6px 16px; background: #2563eb; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">Apply</a>
@@ -179,8 +190,8 @@ class Notifier:
             <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 8px; font-weight: bold; color: #22c55e;">{score.overall_score}</td>
                 <td style="padding: 10px 8px;">
-                    <div style="font-weight: 600;">{job.title}</div>
-                    <div style="color: #6b7280; font-size: 13px;">{job.company}</div>
+                    <div style="font-weight: 600;">{_esc(job.title)}</div>
+                    <div style="color: #6b7280; font-size: 13px;">{_esc(job.company)}</div>
                 </td>
                 <td style="padding: 10px 8px; color: #22c55e; font-weight: 500;">Applied</td>
             </tr>"""
@@ -279,12 +290,12 @@ class Notifier:
                 <h1 style="color: white; margin: 8px 0 0 0; font-size: 20px;">Application Submitted</h1>
             </div>
             <div style="background: white; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                <h2 style="margin: 0; color: #111827;">{job.title}</h2>
-                <p style="color: #6b7280; margin: 4px 0 16px 0;">{job.company} &middot; {tier_label} &middot; {job.location or 'Remote'}</p>
+                <h2 style="margin: 0; color: #111827;">{_esc(job.title)}</h2>
+                <p style="color: #6b7280; margin: 4px 0 16px 0;">{_esc(job.company)} &middot; {tier_label} &middot; {_esc(job.location) or 'Remote'}</p>
                 <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                     <div style="font-size: 14px; color: #6b7280;">Match Score</div>
                     <div style="font-size: 36px; font-weight: bold; color: #16a34a;">{score.overall_score}/100</div>
-                    <div style="font-size: 13px; color: #374151; margin-top: 8px;">{score.reasoning}</div>
+                    <div style="font-size: 13px; color: #374151; margin-top: 8px;">{_esc(score.reasoning)}</div>
                 </div>
                 <div style="font-size: 13px; color: #9ca3af;">
                     Skills: {score.skill_score} &middot; Experience: {score.experience_score} &middot; Seniority: {score.seniority_score}
@@ -306,12 +317,12 @@ class Notifier:
                 <h1 style="color: white; margin: 8px 0 0 0; font-size: 20px;">High Match — Apply Now</h1>
             </div>
             <div style="background: white; padding: 24px; border: 1px solid #e5e7eb; border-top: none;">
-                <h2 style="margin: 0; color: #111827;">{job.title}</h2>
-                <p style="color: #6b7280; margin: 4px 0 16px 0;">{job.company} &middot; {tier_label} &middot; {job.location or 'Remote'}</p>
+                <h2 style="margin: 0; color: #111827;">{_esc(job.title)}</h2>
+                <p style="color: #6b7280; margin: 4px 0 16px 0;">{_esc(job.company)} &middot; {tier_label} &middot; {_esc(job.location) or 'Remote'}</p>
                 <div style="background: #fefce8; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                     <div style="font-size: 14px; color: #6b7280;">Match Score</div>
                     <div style="font-size: 36px; font-weight: bold; color: #ca8a04;">{score.overall_score}/100</div>
-                    <div style="font-size: 13px; color: #374151; margin-top: 8px;">{score.reasoning}</div>
+                    <div style="font-size: 13px; color: #374151; margin-top: 8px;">{_esc(score.reasoning)}</div>
                 </div>
                 <div style="text-align: center; margin: 20px 0;">
                     <a href="{apply_url}" style="display: inline-block; padding: 12px 32px; background: #2563eb; color: white; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600;">Apply Now</a>

@@ -94,17 +94,29 @@ class TestGreenhouseSubmit:
     """Test Greenhouse _submit confirmation logic."""
 
     @pytest.mark.asyncio
-    async def test_url_redirect_confirms_success(self, applicant_info):
-        """URL change after submit = confirmed success."""
+    async def test_url_redirect_with_confirmation_text_succeeds(self, applicant_info):
+        """URL change + confirmation text on new page = confirmed success."""
         page = make_mock_page(
             pre_url="https://boards.greenhouse.io/company/jobs/123",
             post_url="https://boards.greenhouse.io/company/jobs/123/thank_you",
-            pre_text="Apply for this role. Thank you for your interest.",
-            post_text="Thank you for your interest.",
+            pre_text="Apply for this role.",
+            post_text="Thanks for applying! We received your application.",
         )
         applicant = GreenhouseApplicant(applicant_info)
-        # Should NOT raise — URL change is sufficient
         await applicant._submit(page)
+
+    @pytest.mark.asyncio
+    async def test_url_redirect_without_confirmation_text_fails(self, applicant_info):
+        """URL change but no confirmation text on new page = not reliable."""
+        page = make_mock_page(
+            pre_url="https://boards.greenhouse.io/company/jobs/123",
+            post_url="https://boards.greenhouse.io/login",
+            pre_text="Apply for this role.",
+            post_text="Please log in to continue.",
+        )
+        applicant = GreenhouseApplicant(applicant_info)
+        with pytest.raises(RuntimeError, match="no confirmation detected"):
+            await applicant._submit(page)
 
     @pytest.mark.asyncio
     async def test_preexisting_thank_you_not_false_positive(self, applicant_info):
@@ -202,15 +214,29 @@ class TestLeverSubmit:
     """Test Lever _submit confirmation logic."""
 
     @pytest.mark.asyncio
-    async def test_url_redirect_confirms_success(self, applicant_info):
+    async def test_url_redirect_with_confirmation_text_succeeds(self, applicant_info):
+        """URL change + confirmation text on new page = success."""
         page = make_mock_page(
             pre_url="https://jobs.lever.co/company/abc123/apply",
             post_url="https://jobs.lever.co/company/abc123/thanks",
             pre_text="Apply here.",
-            post_text="Thanks for applying!",
+            post_text="Thanks for applying! We received your application.",
         )
         applicant = LeverApplicant(applicant_info)
         await applicant._submit(page)
+
+    @pytest.mark.asyncio
+    async def test_url_redirect_without_confirmation_text_fails(self, applicant_info):
+        """URL change but no confirmation text = not reliable."""
+        page = make_mock_page(
+            pre_url="https://jobs.lever.co/company/abc123/apply",
+            post_url="https://jobs.lever.co/company/abc123/error",
+            pre_text="Apply here.",
+            post_text="Something went wrong.",
+        )
+        applicant = LeverApplicant(applicant_info)
+        with pytest.raises(RuntimeError, match="no confirmation detected"):
+            await applicant._submit(page)
 
     @pytest.mark.asyncio
     async def test_preexisting_text_no_false_positive(self, applicant_info):
@@ -262,15 +288,29 @@ class TestWorkdaySubmit:
     """Test Workday _final_submit confirmation logic."""
 
     @pytest.mark.asyncio
-    async def test_url_redirect_confirms_success(self, applicant_info):
+    async def test_url_redirect_with_confirmation_text_succeeds(self, applicant_info):
+        """URL change + confirmation text on new page = success."""
         page = make_mock_page(
             pre_url="https://company.wd5.myworkdayjobs.com/en-US/careers/job/apply",
             post_url="https://company.wd5.myworkdayjobs.com/en-US/careers/job/thank-you",
             pre_text="Review your application.",
-            post_text="Thank you!",
+            post_text="Your application has been submitted successfully!",
         )
         applicant = WorkdayApplicant(applicant_info)
         await applicant._final_submit(page)
+
+    @pytest.mark.asyncio
+    async def test_url_redirect_without_confirmation_text_fails(self, applicant_info):
+        """URL change but no confirmation text = not reliable."""
+        page = make_mock_page(
+            pre_url="https://company.wd5.myworkdayjobs.com/apply",
+            post_url="https://company.wd5.myworkdayjobs.com/login",
+            pre_text="Review your application.",
+            post_text="Sign in to continue.",
+        )
+        applicant = WorkdayApplicant(applicant_info)
+        with pytest.raises(RuntimeError, match="no confirmation detected"):
+            await applicant._final_submit(page)
 
     @pytest.mark.asyncio
     async def test_preexisting_text_no_false_positive(self, applicant_info):

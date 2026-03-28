@@ -161,9 +161,18 @@ class Pipeline:
 
         finally:
             # Step 5: Notify digest — ALWAYS runs, even if ANY step above crashed
+            # Keep DB queries separate so a query failure doesn't kill the whole digest
+            all_qualified: list[tuple[Job, MatchScore]] = []
+            stats: dict = {}
             try:
                 all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
+            except Exception as e:
+                logger.error(f"Failed to query qualified jobs for digest: {e}")
+            try:
                 stats = self.db.get_stats()
+            except Exception as e:
+                logger.error(f"Failed to query stats for digest: {e}")
+            try:
                 self.notifier.notify_digest(
                     stats, len(new_jobs), applied_count, manual_count,
                     qualified_jobs=all_qualified,
