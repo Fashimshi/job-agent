@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -112,14 +113,27 @@ class Pipeline:
                 auto_candidates = self.db.get_auto_apply_candidates(
                     self.settings.matching.min_score_auto_apply
                 )
+                # Cap total attempts (not just successes) to prevent timeout.
+                # Each Playwright attempt takes ~25s, so 3x max_per_day keeps
+                # total apply time under ~15 minutes even if all fail.
+                max_attempts = self.settings.application.max_per_day * 3
+                attempt_count = 0
+                apply_deadline = time.monotonic() + 40 * 60  # 40 min hard limit for apply step
                 for job, score in auto_candidates:
                     if self.registry.is_excluded_from_apply(job.company):
                         continue
                     if self.db.get_today_application_count() >= self.settings.application.max_per_day:
                         logger.warning("Daily application limit reached")
                         break
+                    if attempt_count >= max_attempts:
+                        logger.warning(f"Max apply attempts reached ({max_attempts}), stopping")
+                        break
+                    if time.monotonic() > apply_deadline:
+                        logger.warning("Apply step time limit reached (40 min), stopping to ensure digest sends")
+                        break
 
                     try:
+                        attempt_count += 1
                         result = await self.apply_to_job(job, score, dry_run)
                         if result:
                             applied_count += 1
