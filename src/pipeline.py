@@ -77,8 +77,9 @@ class Pipeline:
         )
 
     async def run(self, dry_run: bool | None = None) -> dict:
-        """Run the full pipeline: discover -> filter -> score -> apply/notify."""
+        """Run the full pipeline: discover -> filter -> score -> digest -> apply/notify."""
         dry_run = dry_run if dry_run is not None else self.settings.application.dry_run
+        pipeline_start = time.monotonic()
 
         logger.info("=" * 60)
         logger.info("STARTING JOB AGENT PIPELINE")
@@ -105,95 +106,87 @@ class Pipeline:
             scored = await self.score(filtered)
             logger.info(f"Step 3 SCORE: {len(scored)} jobs scored")
 
-            # Step 4: Triage and act
-            failed_auto = []  # Jobs that couldn't auto-apply → fall through to manual
-
-            try:
-                # Auto-apply candidates (score >= threshold, any ATS — we resolve at runtime)
-                auto_candidates = self.db.get_auto_apply_candidates(
-                    self.settings.matching.min_score_auto_apply
-                )
-                # Cap total attempts (not just successes) to prevent timeout.
-                # Each Playwright attempt takes ~25s, so 3x max_per_day keeps
-                # total apply time under ~15 minutes even if all fail.
-                max_attempts = self.settings.application.max_per_day * 3
-                attempt_count = 0
-                apply_deadline = time.monotonic() + 40 * 60  # 40 min hard limit for apply step
-                for job, score in auto_candidates:
-                    if self.registry.is_excluded_from_apply(job.company):
-                        continue
-                    if self.db.get_today_application_count() >= self.settings.application.max_per_day:
-                        logger.warning("Daily application limit reached")
-                        break
-                    if attempt_count >= max_attempts:
-                        logger.warning(f"Max apply attempts reached ({max_attempts}), stopping")
-                        break
-                    if time.monotonic() > apply_deadline:
-                        logger.warning("Apply step time limit reached (40 min), stopping to ensure digest sends")
-                        break
-
-                    try:
-                        attempt_count += 1
-                        result = await self.apply_to_job(job, score, dry_run)
-                        if result:
-                            applied_count += 1
-                            applied_jobs.append((job, score))
-                        else:
-                            # Couldn't auto-apply (unsupported ATS, untrusted URL, etc.)
-                            failed_auto.append((job, score))
-                    except Exception as e:
-                        logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
-                        failed_auto.append((job, score))
-
-                # Manual notification: scored >= notify threshold + failed auto-apply jobs
-                manual_candidates = self.db.get_jobs_needing_notification(
-                    self.settings.matching.min_score_notify
-                )
-                # Merge failed auto-apply into manual list (avoid duplicates)
-                manual_job_ids = {j.id for j, _ in manual_candidates}
-                for job, score in failed_auto:
-                    if job.id not in manual_job_ids:
-                        manual_candidates.append((job, score))
-
-                for job, score in manual_candidates:
-                    if self.registry.is_excluded_from_apply(job.company):
-                        continue
-                    if self.db.is_notified(job.id, "manual_needed"):
-                        continue
-                    try:
-                        await self.prepare_manual_application(job, score)
-                        self.db.mark_notified(job.id, "manual_needed")
-                        manual_count += 1
-                    except Exception as e:
-                        logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
-
-            except Exception as e:
-                logger.error(f"Error during triage step: {e}")
-
         except Exception as e:
             logger.error(f"Pipeline error in discovery/filter/score: {e}")
 
-        finally:
-            # Step 5: Notify digest — ALWAYS runs, even if ANY step above crashed
-            # Keep DB queries separate so a query failure doesn't kill the whole digest
-            all_qualified: list[tuple[Job, MatchScore]] = []
-            stats: dict = {}
-            try:
-                all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
-            except Exception as e:
-                logger.error(f"Failed to query qualified jobs for digest: {e}")
-            try:
-                stats = self.db.get_stats()
-            except Exception as e:
-                logger.error(f"Failed to query stats for digest: {e}")
-            try:
-                self.notifier.notify_digest(
-                    stats, len(new_jobs), applied_count, manual_count,
-                    qualified_jobs=all_qualified,
-                    applied_jobs=applied_jobs,
-                )
-            except Exception as e:
-                logger.error(f"Failed to send digest email: {e}")
+        # Step 4: Send digest FIRST — before apply/notify which can take 60+ min.
+        # This guarantees the user always gets the summary email.
+        try:
+            all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
+            stats = self.db.get_stats()
+            self.notifier.notify_digest(
+                stats, len(new_jobs), applied_count, manual_count,
+                qualified_jobs=all_qualified,
+                applied_jobs=applied_jobs,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send digest email: {e}")
+
+        # Step 5: Triage — auto-apply and manual notifications
+        # These are slow (Playwright + LLM calls) so they run after digest.
+        failed_auto = []
+        try:
+            auto_candidates = self.db.get_auto_apply_candidates(
+                self.settings.matching.min_score_auto_apply
+            )
+            max_attempts = self.settings.application.max_per_day * 3
+            attempt_count = 0
+            apply_deadline = pipeline_start + 40 * 60  # 40 min from pipeline start
+            for job, score in auto_candidates:
+                if self.registry.is_excluded_from_apply(job.company):
+                    continue
+                if self.db.get_today_application_count() >= self.settings.application.max_per_day:
+                    logger.warning("Daily application limit reached")
+                    break
+                if attempt_count >= max_attempts:
+                    logger.warning(f"Max apply attempts reached ({max_attempts}), stopping")
+                    break
+                if time.monotonic() > apply_deadline:
+                    logger.warning("Apply step time limit reached (40 min), stopping")
+                    break
+
+                try:
+                    attempt_count += 1
+                    result = await self.apply_to_job(job, score, dry_run)
+                    if result:
+                        applied_count += 1
+                        applied_jobs.append((job, score))
+                    else:
+                        failed_auto.append((job, score))
+                except Exception as e:
+                    logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
+                    failed_auto.append((job, score))
+
+            # Manual notifications — cap at 15 to avoid timeout
+            manual_candidates = self.db.get_jobs_needing_notification(
+                self.settings.matching.min_score_notify
+            )
+            manual_job_ids = {j.id for j, _ in manual_candidates}
+            for job, score in failed_auto:
+                if job.id not in manual_job_ids:
+                    manual_candidates.append((job, score))
+
+            max_manual = 15
+            for job, score in manual_candidates:
+                if manual_count >= max_manual:
+                    logger.info(f"Manual notification cap reached ({max_manual}), rest included in digest")
+                    break
+                if time.monotonic() > pipeline_start + 70 * 60:
+                    logger.warning("Pipeline time limit approaching, stopping manual notifications")
+                    break
+                if self.registry.is_excluded_from_apply(job.company):
+                    continue
+                if self.db.is_notified(job.id, "manual_needed"):
+                    continue
+                try:
+                    await self.prepare_manual_application(job, score)
+                    self.db.mark_notified(job.id, "manual_needed")
+                    manual_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
+
+        except Exception as e:
+            logger.error(f"Error during triage step: {e}")
 
         # Show summary table
         try:
