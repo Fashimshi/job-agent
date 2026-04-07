@@ -181,6 +181,12 @@ class SerpAPISource(JobSource):
         "startwire.com", "jobvite.com", "applytojob.com",
         "tarta.ai", "ai-jobs.net", "datajobs.com",
         "google.com",  # Google search redirects, not actual jobs
+        "univision.com", "trabajos.univision.com",  # Spanish-language aggregator with fake company names
+        "empleos.net", "opcionempleo.com", "computrabajo.com",
+        "infojobs.net", "bumeran.com", "empleosclarin.com",
+        "jobatus.com", "jobomas.com", "jobtome.com",
+        "recruit.hirebridge.com", "jobs.smartrecruiters.com",
+        "myworkdayjobs.com",  # Generic Workday redirects (not company-specific)
     }
 
     @classmethod

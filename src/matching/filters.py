@@ -116,6 +116,7 @@ class JobFilter:
             and self._seniority_filter(title_lower)
             and self._location_filter(job)
             and self._not_startup(company_lower, title_lower)
+            and self._not_spam_url(job)
         )
 
     def _keyword_filter(self, title_lower: str) -> bool:
@@ -167,6 +168,45 @@ class JobFilter:
             if suffix in self._NON_US_LOCATIONS:
                 return False
 
+        return True
+
+    # Spam/aggregator domains that repost jobs with fake company names
+    _SPAM_DOMAINS = {
+        "univision.com", "trabajos.univision.com",
+        "empleos.net", "opcionempleo.com", "computrabajo.com",
+        "infojobs.net", "bumeran.com", "jobatus.com", "jobomas.com",
+        "jobtome.com", "jobisjob.com", "tarta.ai",
+        "clickajobs.com", "recruit.hirebridge.com",
+        "whatjobs.com", "bebee.com", "jooble.org",
+        "jobrapido.com", "talent.com", "neuvoo.com",
+        "adzuna.com", "getwork.com", "lensa.com",
+        "simplyhired.com", "careerbuilder.com", "monster.com",
+        "snagajob.com", "ziprecruiter.com", "postjobfree.com",
+        "zippia.com", "applytojob.com", "ai-jobs.net",
+    }
+
+    def _not_spam_url(self, job: Job) -> bool:
+        """Reject jobs from spam aggregator URLs."""
+        from urllib.parse import urlparse
+        for url in [job.posting_url, job.apply_url]:
+            if not url:
+                continue
+            try:
+                hostname = urlparse(url).hostname or ""
+                if hostname.startswith("www."):
+                    hostname = hostname[4:]
+                # Check exact match and root domain
+                if hostname in self._SPAM_DOMAINS:
+                    logger.debug(f"Filtered spam URL: {url} for {job.title} at {job.company}")
+                    return False
+                parts = hostname.split(".")
+                if len(parts) >= 2:
+                    root = ".".join(parts[-2:])
+                    if root in self._SPAM_DOMAINS:
+                        logger.debug(f"Filtered spam URL: {url} for {job.title} at {job.company}")
+                        return False
+            except Exception:
+                pass
         return True
 
     def _not_startup(self, company_lower: str, title_lower: str) -> bool:
