@@ -1,0 +1,87 @@
+% ATS-optimized LaTeX CV template -- matches Fauzan Mohammed's resume style
+% Compiled with pdflatex
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+% Colors
+\definecolor{headerblue}{HTML}{4A90D9}
+
+% No page numbers
+\pagestyle{empty}
+
+% Section formatting: SMALL CAPS with horizontal rule
+\titleformat{\section}
+  {\large\scshape\raggedright}
+  {}{0em}
+  {}
+  [\titlerule]
+\titlespacing{\section}{0pt}{10pt}{6pt}
+
+% Tight lists
+\setlist[itemize]{leftmargin=1.5em, itemsep=1pt, parsep=0pt, topsep=2pt}
+
+% Custom commands
+\newcommand{\resumeHeading}[4]{
+  \vspace{2pt}
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+    \textit{#3} & \textit{#4} \\
+  \end{tabular*}
+  \vspace{-4pt}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{2pt}
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+    \textit{#3} & \textit{#4} \\
+  \end{tabular*}
+  \vspace{-4pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+  \vspace{2pt}
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+  \end{tabular*}
+  \vspace{-4pt}
+}
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+  {\LARGE \textbf{<<NAME>>}} \\[4pt]
+  \href{mailto:<<EMAIL>>}{<<EMAIL>>} \enspace$|$\enspace \href{https://<<LINKEDIN>>}{<<LINKEDIN>>}
+\end{center}
+
+%----------SUMMARY----------
+<<SUMMARY_SECTION>>
+
+%----------EDUCATION----------
+\section{Education}
+<<EDUCATION>>
+
+%----------EXPERIENCE----------
+\section{Experience}
+<<EXPERIENCE>>
+
+%----------PROJECTS----------
+<<PROJECTS_SECTION>>
+
+%----------LEADERSHIP----------
+<<LEADERSHIP_SECTION>>
+
+%----------TECHNICAL SKILLS----------
+\section{Technical Skills}
+<<SKILLS>>
+
+\end{document}

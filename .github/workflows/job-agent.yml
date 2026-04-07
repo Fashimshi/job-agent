@@ -37,6 +37,9 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Install LaTeX (for CV PDF generation)
+        run: sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
+
       - name: Write .env from secrets
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
