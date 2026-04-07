@@ -22,7 +22,7 @@ discovery:
     - "AI Engineer"
     - "LLM Engineer"
   location: "United States"
-  posted_within_days: 3
+  posted_within_days: 14
   remote_ok: true
 
 matching:

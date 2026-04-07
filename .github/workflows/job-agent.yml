@@ -2,8 +2,8 @@ name: Job Agent
 
 on:
   schedule:
-    # Monday & Friday at 4:30 PM ET (21:30 UTC)
-    - cron: "30 21 * * 1,5"
+    # Every Thursday at 4:30 PM ET (21:30 UTC)
+    - cron: "30 21 * * 4"
   workflow_dispatch: # allow manual trigger
 
 permissions:
