@@ -6,10 +6,14 @@ on:
     - cron: "30 21 * * 1,5"
   workflow_dispatch: # allow manual trigger
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -19,11 +23,19 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
         run: pip install .
 
+      - name: Install Node dependencies
+        run: npm ci
+
       - name: Install Playwright browsers
-        run: playwright install chromium --with-deps
+        run: npx playwright install chromium --with-deps
 
       - name: Write .env from secrets
         env:
@@ -41,8 +53,8 @@ jobs:
             "NOTIFICATION_EMAIL=mohammedfauzan44@gmail.com" \
             > .env
 
-      - name: Create data directory
-        run: mkdir -p data/screenshots
+      - name: Create data directories
+        run: mkdir -p data/screenshots reports output dashboard
 
       - name: Restore database from previous run
         uses: dawidd6/action-download-artifact@v3
@@ -53,9 +65,17 @@ jobs:
           if_no_artifact_found: warn
         continue-on-error: true
 
-      - name: Run job agent
+      # === UNIFIED PIPELINE ===
+      # discover -> score -> evaluate (Claude API) -> generate PDF -> apply -> digest -> export
+      - name: Run unified pipeline
         run: python -m src.cli run --no-dry-run --yes
 
+      # === EXPORT DASHBOARD ===
+      - name: Export dashboard data
+        if: always()
+        run: python -m src.cli export-dashboard
+
+      # === SAVE ARTIFACTS ===
       - name: Save database for next run
         uses: actions/upload-artifact@v4
         if: always()
@@ -73,3 +93,30 @@ jobs:
           path: data/screenshots/
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Save reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: job-agent-reports-${{ github.run_number }}
+          path: reports/
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Save PDFs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: job-agent-pdfs-${{ github.run_number }}
+          path: output/
+          retention-days: 90
+          if-no-files-found: ignore
+
+      # === DEPLOY DASHBOARD TO GITHUB PAGES ===
+      - name: Deploy dashboard to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dashboard
+          publish_branch: gh-pages

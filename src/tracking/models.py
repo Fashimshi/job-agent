@@ -26,10 +26,16 @@ class ATSType(str, Enum):
 class ApplicationStatus(str, Enum):
     PENDING = "pending"
     READY_TO_APPLY = "ready_to_apply"
+    EVALUATED = "evaluated"
     APPLIED = "applied"
     FAILED = "failed"
     MANUAL_NEEDED = "manual_needed"
     SKIPPED = "skipped"
+    RESPONDED = "responded"
+    INTERVIEW = "interview"
+    OFFER = "offer"
+    REJECTED = "rejected"
+    DISCARDED = "discarded"
 
 
 class RawJob(BaseModel):
@@ -114,3 +120,36 @@ class ApplicationResult(BaseModel):
     screenshot_path: str | None = None
     error_message: str | None = None
     submitted_at: datetime | None = None
+
+
+class Artifact(BaseModel):
+    id: str = Field(default_factory=_new_id)
+    job_id: str
+    type: str  # 'pdf', 'report_md', 'cover_letter', 'html_cv'
+    file_path: str | None = None
+    content: str | None = None
+    created_at: datetime = Field(default_factory=_utcnow)
+    metadata_json: str | None = None
+
+
+class StoryBankEntry(BaseModel):
+    id: str = Field(default_factory=_new_id)
+    story_title: str
+    situation: str = ""
+    task: str = ""
+    action: str = ""
+    result: str = ""
+    reflection: str = ""
+    source_job_ids: str = "[]"  # JSON array
+    tags: str = "[]"  # JSON array
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class PipelineRun(BaseModel):
+    id: str = Field(default_factory=_new_id)
+    started_at: datetime = Field(default_factory=_utcnow)
+    completed_at: datetime | None = None
+    trigger: str = "manual"  # 'scheduled', 'manual', 'workflow_dispatch'
+    steps_json: str = "{}"
+    summary_json: str = "{}"

@@ -76,6 +76,7 @@ def run(
         result = asyncio.run(pipeline.run(dry_run=dry_run))
         console.print(f"\n[bold green]Done![/bold green] "
                       f"New: {result['new_jobs']} | Scored: {result['scored']} | "
+                      f"Evaluated: {result['evaluated']} | PDFs: {result['pdfs']} | "
                       f"Applied: {result['applied']} | Manual: {result['manual_needed']}")
     finally:
         pipeline.close()
@@ -284,6 +285,90 @@ def companies(
         )
 
     console.print(table)
+
+
+@app.command(name="export-dashboard")
+def export_dashboard_cmd(
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Export pipeline data for GitHub Pages dashboard."""
+    setup_logging(verbose)
+    settings = load_settings()
+
+    pipeline = Pipeline(settings)
+    try:
+        from src.export import export_dashboard, export_markdown
+        data_path = export_dashboard(pipeline.db)
+        export_markdown(pipeline.db)
+        console.print(f"[bold green]Exported![/bold green] Dashboard: {data_path}")
+    except Exception as e:
+        console.print(f"[red]Export failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        raise typer.Exit(1)
+    finally:
+        pipeline.close()
+
+
+@app.command()
+def sync(
+    min_score: int = typer.Option(70, "--min-score", help="Min score to sync to career-ops pipeline"),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Sync Python agent results into career-ops format (applications.md + pipeline.md).
+
+    Bridges the automated discovery system with career-ops interactive evaluation.
+    High-scoring jobs get added to pipeline.md for deep A-F evaluation.
+    All scored jobs get tracked in applications.md.
+    """
+    setup_logging(verbose)
+    settings = load_settings()
+
+    pipeline = Pipeline(settings)
+    try:
+        from src.sync_to_career_ops import sync_to_career_ops
+        added_pipeline, added_tracker = sync_to_career_ops(pipeline.db, min_score)
+        console.print(f"[bold green]Synced![/bold green] "
+                      f"{added_pipeline} jobs added to pipeline.md, "
+                      f"{added_tracker} entries added to applications.md")
+    except Exception as e:
+        console.print(f"[red]Sync failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        raise typer.Exit(1)
+    finally:
+        pipeline.close()
+
+
+@app.command()
+def digest(
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Send email digest of top matches (runs independently, never blocked by apply)."""
+    setup_logging(verbose)
+    settings = load_settings()
+
+    pipeline = Pipeline(settings)
+    try:
+        all_qualified = pipeline.db.get_jobs_by_score(settings.matching.min_score_notify)
+        stats = pipeline.db.get_stats()
+        applied_jobs = []  # Digest shows qualified jobs, not applied ones
+
+        pipeline.notifier.notify_digest(
+            stats,
+            new_jobs_count=0,
+            applied_count=stats.get("applications_submitted", 0),
+            manual_count=0,
+            qualified_jobs=all_qualified,
+            applied_jobs=applied_jobs,
+        )
+        console.print(f"[bold green]Digest sent![/bold green] "
+                      f"({len(all_qualified)} qualified jobs included)")
+    except Exception as e:
+        console.print(f"[red]Failed to send digest: {e}[/red]")
+        raise typer.Exit(1)
+    finally:
+        pipeline.close()
 
 
 @app.command(name="refresh-resume")

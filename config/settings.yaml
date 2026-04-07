@@ -64,6 +64,18 @@ role_keywords:
   - "research scientist"
   - "llm"
 
+evaluation:
+  enabled: true
+  min_score_evaluate: 75
+  min_score_generate_pdf: 4.0
+  max_evaluations_per_run: 15
+  evaluation_model: "gpt-4o"
+
+dashboard:
+  enabled: true
+  deploy_branch: "gh-pages"
+  max_jobs_in_export: 500
+
 notifications:
   channels:
     - "console"

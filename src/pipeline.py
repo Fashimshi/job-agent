@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from src.evaluation.evaluator import JobEvaluator
+from src.evaluation.pdf_builder import PdfBuilder
 from src.application.cover_letter import CoverLetterGenerator
 from src.application.greenhouse_apply import GreenhouseApplicant
 from src.application.lever_apply import LeverApplicant
@@ -34,6 +36,7 @@ from src.tracking.models import (
     ApplicantInfo,
     Job,
     MatchScore,
+    PipelineRun,
 )
 
 if TYPE_CHECKING:
@@ -41,9 +44,23 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Step timeouts (seconds)
+DISCOVER_TIMEOUT = 15 * 60   # 15 min
+SCORE_TIMEOUT = 20 * 60      # 20 min
+EVALUATE_TIMEOUT = 15 * 60   # 15 min
+GENERATE_TIMEOUT = 10 * 60   # 10 min
+DIGEST_TIMEOUT = 3 * 60      # 3 min
+APPLY_TIMEOUT = 15 * 60      # 15 min
+MANUAL_TIMEOUT = 5 * 60      # 5 min
+
 
 class Pipeline:
-    """End-to-end job discovery, matching, and application pipeline."""
+    """End-to-end job discovery, matching, and application pipeline.
+
+    Each step has its own timeout so no single step can starve the others.
+    Order: discover -> filter -> score -> DIGEST -> apply -> manual notify
+    Digest runs before apply so it always sends, even if apply is slow.
+    """
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -61,6 +78,16 @@ class Pipeline:
         self.cover_letter_gen = CoverLetterGenerator(self.llm, settings.resume_text_path)
         self.notifier = Notifier(settings)
 
+        # Evaluation engine (career-ops A-F blocks via Claude API)
+        resume_text = ""
+        cv_path = Path(settings.resolve_path("cv.md"))
+        if cv_path.exists():
+            resume_text = cv_path.read_text(encoding="utf-8")[:4000]
+        elif settings.resume_text_path.exists():
+            resume_text = settings.resume_text_path.read_text(encoding="utf-8")[:4000]
+        self.evaluator = JobEvaluator(self.llm, self.db, resume_text)
+        self.pdf_builder = PdfBuilder(self.db)
+
         self.applicant_info = ApplicantInfo(
             first_name=settings.applicant.first_name,
             last_name=settings.applicant.last_name,
@@ -77,9 +104,14 @@ class Pipeline:
         )
 
     async def run(self, dry_run: bool | None = None) -> dict:
-        """Run the full pipeline: discover -> filter -> score -> digest -> apply/notify."""
+        """Run the full pipeline with per-step timeouts.
+
+        Order: discover -> filter -> score -> DIGEST -> apply -> manual notify
+
+        Digest sends BEFORE apply so you always get the email even if apply
+        takes too long or crashes.
+        """
         dry_run = dry_run if dry_run is not None else self.settings.application.dry_run
-        pipeline_start = time.monotonic()
 
         logger.info("=" * 60)
         logger.info("STARTING JOB AGENT PIPELINE")
@@ -88,50 +120,130 @@ class Pipeline:
         new_jobs: list = []
         filtered: list = []
         scored: list = []
+        evaluated_count = 0
+        pdf_count = 0
         applied_count = 0
         manual_count = 0
         applied_jobs: list[tuple[Job, MatchScore]] = []
 
-        try:
-            # Step 1: Discover
-            new_jobs = await self.discover()
-            logger.info(f"Step 1 DISCOVER: {len(new_jobs)} new jobs found")
+        # Record pipeline run
+        pipeline_run = PipelineRun(trigger="automated")
+        self.db.insert_pipeline_run(pipeline_run)
 
-            # Step 2: Filter
+        # ── Step 1: DISCOVER (15 min timeout) ────────────────────────
+        try:
+            new_jobs = await asyncio.wait_for(
+                self.discover(), timeout=DISCOVER_TIMEOUT
+            )
+            logger.info(f"DISCOVER: {len(new_jobs)} new jobs found")
+        except asyncio.TimeoutError:
+            logger.error(f"DISCOVER timed out after {DISCOVER_TIMEOUT // 60} min")
+        except Exception as e:
+            logger.error(f"DISCOVER failed: {e}")
+
+        # ── Step 2: FILTER ───────────────────────────────────────────
+        try:
             unscored = self.db.get_unscored_jobs()
             filtered = self.filter.apply_all(unscored)
-            logger.info(f"Step 2 FILTER: {len(filtered)}/{len(unscored)} passed filters")
-
-            # Step 3: Score
-            scored = await self.score(filtered)
-            logger.info(f"Step 3 SCORE: {len(scored)} jobs scored")
-
+            logger.info(f"FILTER: {len(filtered)}/{len(unscored)} passed")
         except Exception as e:
-            logger.error(f"Pipeline error in discovery/filter/score: {e}")
+            logger.error(f"FILTER failed: {e}")
 
-        # Step 4: Send digest FIRST — before apply/notify which can take 60+ min.
-        # This guarantees the user always gets the summary email.
+        # ── Step 3: SCORE (20 min timeout) ───────────────────────────
+        try:
+            scored = await asyncio.wait_for(
+                self.score(filtered), timeout=SCORE_TIMEOUT
+            )
+            logger.info(f"SCORE: {len(scored)} jobs scored")
+        except asyncio.TimeoutError:
+            logger.error(f"SCORE timed out after {SCORE_TIMEOUT // 60} min")
+        except Exception as e:
+            logger.error(f"SCORE failed: {e}")
+
+        # ── Step 4: EVALUATE (15 min timeout, deep A-F via Claude API) ─
+        try:
+            min_eval = getattr(self.settings, '_min_score_evaluate', 75)
+            eval_candidates = self.db.get_unevaluated_jobs(min_eval)
+            max_evals = 15
+            eval_start = time.monotonic()
+
+            for job, score in eval_candidates[:max_evals]:
+                if time.monotonic() - eval_start > EVALUATE_TIMEOUT:
+                    logger.warning(f"EVALUATE timed out after {EVALUATE_TIMEOUT // 60} min")
+                    break
+                try:
+                    result = await self.evaluator.evaluate(job, score)
+                    if result:
+                        evaluated_count += 1
+                except Exception as e:
+                    logger.error(f"Evaluate error for {job.title} at {job.company}: {e}")
+
+            logger.info(f"EVALUATE: {evaluated_count} deep evaluations completed")
+        except Exception as e:
+            logger.error(f"EVALUATE step failed: {e}")
+
+        # ── Step 5: GENERATE PDF (10 min timeout) ───────────────────
+        try:
+            gen_start = time.monotonic()
+            # Get evaluated jobs with score >= 4.0/5 for PDF generation
+            all_evaluated = self.db.get_jobs_by_score(0)
+            for job, score in all_evaluated:
+                if time.monotonic() - gen_start > GENERATE_TIMEOUT:
+                    logger.warning(f"GENERATE timed out after {GENERATE_TIMEOUT // 60} min")
+                    break
+                # Check if already has PDF
+                if self.db.get_artifact(job.id, "pdf"):
+                    continue
+                # Check if has evaluation with score >= 4.0
+                row = self.db.conn.execute(
+                    "SELECT evaluation_json FROM match_scores WHERE job_id=?",
+                    (job.id,),
+                ).fetchone()
+                if not row or not row["evaluation_json"]:
+                    continue
+                try:
+                    import json as _json
+                    eval_data = _json.loads(row["evaluation_json"])
+                    if eval_data.get("score_5", 0) >= 4.0:
+                        pdf_path = self.pdf_builder.build(job, eval_data)
+                        if pdf_path:
+                            pdf_count += 1
+                except Exception as e:
+                    logger.error(f"PDF generation error for {job.title}: {e}")
+
+            logger.info(f"GENERATE: {pdf_count} tailored PDFs created")
+        except Exception as e:
+            logger.error(f"GENERATE step failed: {e}")
+
+        # ── Step 6: DIGEST (3 min timeout, runs BEFORE apply) ───────
         try:
             all_qualified = self.db.get_jobs_by_score(self.settings.matching.min_score_notify)
             stats = self.db.get_stats()
-            self.notifier.notify_digest(
-                stats, len(new_jobs), applied_count, manual_count,
-                qualified_jobs=all_qualified,
-                applied_jobs=applied_jobs,
+            await asyncio.wait_for(
+                asyncio.to_thread(
+                    self.notifier.notify_digest,
+                    stats, len(new_jobs), applied_count, manual_count,
+                    qualified_jobs=all_qualified,
+                    applied_jobs=applied_jobs,
+                ),
+                timeout=DIGEST_TIMEOUT,
             )
+            logger.info("DIGEST: sent successfully")
+        except asyncio.TimeoutError:
+            logger.error(f"DIGEST timed out after {DIGEST_TIMEOUT // 60} min")
         except Exception as e:
-            logger.error(f"Failed to send digest email: {e}")
+            logger.error(f"DIGEST failed: {e}")
 
-        # Step 5: Triage — auto-apply and manual notifications
-        # These are slow (Playwright + LLM calls) so they run after digest.
+        # ── Step 5: AUTO-APPLY (15 min timeout) ─────────────────────
         failed_auto = []
         try:
             auto_candidates = self.db.get_auto_apply_candidates(
                 self.settings.matching.min_score_auto_apply
             )
+            apply_start = time.monotonic()
             max_attempts = self.settings.application.max_per_day * 3
             attempt_count = 0
-            apply_deadline = pipeline_start + 40 * 60  # 40 min from pipeline start
+
             for job, score in auto_candidates:
                 if self.registry.is_excluded_from_apply(job.company):
                     continue
@@ -139,10 +251,10 @@ class Pipeline:
                     logger.warning("Daily application limit reached")
                     break
                 if attempt_count >= max_attempts:
-                    logger.warning(f"Max apply attempts reached ({max_attempts}), stopping")
+                    logger.warning(f"Max apply attempts reached ({max_attempts})")
                     break
-                if time.monotonic() > apply_deadline:
-                    logger.warning("Apply step time limit reached (40 min), stopping")
+                if time.monotonic() - apply_start > APPLY_TIMEOUT:
+                    logger.warning(f"APPLY timed out after {APPLY_TIMEOUT // 60} min")
                     break
 
                 try:
@@ -154,13 +266,20 @@ class Pipeline:
                     else:
                         failed_auto.append((job, score))
                 except Exception as e:
-                    logger.error(f"Unexpected error applying to {job.title} at {job.company}: {e}")
+                    logger.error(f"Apply error for {job.title} at {job.company}: {e}")
                     failed_auto.append((job, score))
 
-            # Manual notifications — cap at 15 to avoid timeout
+            logger.info(f"APPLY: {applied_count} applications submitted, {len(failed_auto)} failed")
+        except Exception as e:
+            logger.error(f"APPLY step failed: {e}")
+
+        # ── Step 6: MANUAL NOTIFICATIONS (5 min timeout) ────────────
+        try:
+            manual_start = time.monotonic()
             manual_candidates = self.db.get_jobs_needing_notification(
                 self.settings.matching.min_score_notify
             )
+            # Add failed auto-apply jobs to manual queue
             manual_job_ids = {j.id for j, _ in manual_candidates}
             for job, score in failed_auto:
                 if job.id not in manual_job_ids:
@@ -169,10 +288,10 @@ class Pipeline:
             max_manual = 15
             for job, score in manual_candidates:
                 if manual_count >= max_manual:
-                    logger.info(f"Manual notification cap reached ({max_manual}), rest included in digest")
+                    logger.info(f"Manual cap reached ({max_manual})")
                     break
-                if time.monotonic() > pipeline_start + 70 * 60:
-                    logger.warning("Pipeline time limit approaching, stopping manual notifications")
+                if time.monotonic() - manual_start > MANUAL_TIMEOUT:
+                    logger.warning(f"MANUAL timed out after {MANUAL_TIMEOUT // 60} min")
                     break
                 if self.registry.is_excluded_from_apply(job.company):
                     continue
@@ -183,12 +302,13 @@ class Pipeline:
                     self.db.mark_notified(job.id, "manual_needed")
                     manual_count += 1
                 except Exception as e:
-                    logger.error(f"Failed to prepare manual notification for {job.title}: {e}")
+                    logger.error(f"Manual notify error for {job.title}: {e}")
 
+            logger.info(f"MANUAL: {manual_count} notifications sent")
         except Exception as e:
-            logger.error(f"Error during triage step: {e}")
+            logger.error(f"MANUAL step failed: {e}")
 
-        # Show summary table
+        # ── Summary ─────────────────────────────────────────────────
         try:
             all_scored = self.db.get_jobs_by_score(self.settings.matching.min_score_log)
             if all_scored:
@@ -196,14 +316,50 @@ class Pipeline:
         except Exception:
             pass
 
+        # ── Step 9: EXPORT (dashboard + markdown) ───────────────────
+        try:
+            from src.export import export_dashboard, export_markdown
+            export_dashboard(self.db)
+            export_markdown(self.db)
+            logger.info("EXPORT: dashboard data + markdown exported")
+        except Exception as e:
+            logger.error(f"EXPORT failed: {e}")
+
+        # ── Record pipeline run completion ──────────────────────────
+        import json as _json
+        summary = {
+            "new_jobs": len(new_jobs), "filtered": len(filtered),
+            "scored": len(scored), "evaluated": evaluated_count,
+            "pdfs": pdf_count, "applied": applied_count,
+            "manual": manual_count,
+        }
+        try:
+            self.db.update_pipeline_run(
+                pipeline_run.id,
+                completed_at=datetime.now(timezone.utc),
+                steps_json="{}",
+                summary_json=_json.dumps(summary),
+            )
+        except Exception:
+            pass
+
         logger.info("=" * 60)
         logger.info("PIPELINE COMPLETE")
+        logger.info(f"  Discovered: {len(new_jobs)}")
+        logger.info(f"  Filtered: {len(filtered)}")
+        logger.info(f"  Scored: {len(scored)}")
+        logger.info(f"  Evaluated: {evaluated_count}")
+        logger.info(f"  PDFs: {pdf_count}")
+        logger.info(f"  Applied: {applied_count}")
+        logger.info(f"  Manual: {manual_count}")
         logger.info("=" * 60)
 
         return {
             "new_jobs": len(new_jobs),
             "filtered": len(filtered),
             "scored": len(scored),
+            "evaluated": evaluated_count,
+            "pdfs": pdf_count,
             "applied": applied_count,
             "manual_needed": manual_count,
         }
@@ -322,7 +478,7 @@ class Pipeline:
             logger.debug(f"Failed to resolve ATS for {job.apply_url}: {e}")
 
     async def apply_to_job(self, job: Job, score: MatchScore, dry_run: bool) -> bool:
-        """Auto-apply to a single job."""
+        """Auto-apply to a single job via Playwright (Greenhouse/Lever/Workday)."""
         logger.info(f"Applying to: {job.title} at {job.company} (score: {score.overall_score})")
 
         # Resolve ATS type if unknown (follow redirects to detect platform)
