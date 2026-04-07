@@ -52,6 +52,16 @@ def export_dashboard(db: Database) -> str:
         score_100 = row.get("overall_score") or 0
         score_5 = eval_data.get("score_5", round(score_100 / 20, 1) if score_100 else 0)
 
+        # Get artifact paths for download links
+        pdf_artifact = db.get_artifact(row["id"], "pdf")
+        report_artifact = db.get_artifact(row["id"], "report_md")
+        pdf_path = pdf_artifact["file_path"] if pdf_artifact else None
+        report_path = report_artifact["file_path"] if report_artifact else None
+
+        # Determine if auto-apply is possible
+        ats = row.get("ats_type", "unknown")
+        can_auto_apply = ats in ("greenhouse", "lever", "workday")
+
         jobs_export.append({
             "id": row["id"],
             "company": row["company"],
@@ -67,13 +77,16 @@ def export_dashboard(db: Database) -> str:
             "comp_estimate": block_d.get("estimated_comp", ""),
             "match_pct": eval_data.get("block_b", {}).get("match_percentage", None),
             "has_evaluation": bool(eval_data),
-            "has_pdf": db.get_artifact(row["id"], "pdf") is not None,
-            "has_report": db.get_artifact(row["id"], "report_md") is not None,
+            "has_pdf": pdf_path is not None,
+            "pdf_path": pdf_path,
+            "has_report": report_path is not None,
+            "report_path": report_path,
+            "can_auto_apply": can_auto_apply,
             "applied_at": row.get("app_applied_at", ""),
             "discovered_at": row.get("discovered_at", ""),
             "posting_url": row.get("posting_url", ""),
             "location": row.get("location", ""),
-            "ats_type": row.get("ats_type", ""),
+            "ats_type": ats,
             "reasoning": row.get("reasoning", ""),
         })
 

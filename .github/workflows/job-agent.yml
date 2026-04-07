@@ -112,6 +112,15 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+      # === COPY PDFS AND REPORTS INTO DASHBOARD FOR DOWNLOAD ===
+      - name: Bundle PDFs and reports for dashboard
+        if: always()
+        run: |
+          mkdir -p dashboard/output dashboard/reports
+          cp output/*.pdf dashboard/output/ 2>/dev/null || true
+          cp reports/*.md dashboard/reports/ 2>/dev/null || true
+          echo "PDFs: $(ls dashboard/output/ 2>/dev/null | wc -l), Reports: $(ls dashboard/reports/ 2>/dev/null | wc -l)"
+
       # === DEPLOY DASHBOARD TO GITHUB PAGES ===
       - name: Deploy dashboard to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
