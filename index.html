@@ -106,6 +106,16 @@
     .funnel-step::after { display: none; }
   }
 
+  /* Action buttons */
+  .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .action-btn { display: inline-block; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+  .action-apply { background: var(--accent); color: white; }
+  .action-apply:hover { background: #2563eb; }
+  .action-pdf { background: var(--green); color: #0f172a; }
+  .action-pdf:hover { background: #16a34a; color: white; }
+  .action-report { background: var(--purple); color: white; }
+  .action-report:hover { background: #7c3aed; }
+
   .hidden { display: none; }
 </style>
 </head>
@@ -327,6 +337,28 @@ function renderJobs() {
     </tr>`;
 
     if (isExpanded) {
+      // Build action buttons
+      let actions = '';
+      if (j.posting_url) {
+        actions += `<a class="action-btn action-apply" href="${j.posting_url}" target="_blank">Apply Now</a>`;
+      }
+      if (j.has_pdf && j.pdf_path) {
+        actions += `<a class="action-btn action-pdf" href="${j.pdf_path}" download>Download Tailored CV (PDF)</a>`;
+      }
+      if (j.has_report && j.report_path) {
+        actions += `<a class="action-btn action-report" href="${j.report_path}" target="_blank">View Full Report</a>`;
+      }
+
+      // Auto-apply status
+      let applyNote = '';
+      if (j.can_auto_apply) {
+        applyNote = j.status === 'applied'
+          ? '<span style="color:var(--green)">Auto-applied</span>'
+          : `<span style="color:var(--cyan)">Auto-apply available (${esc(j.ats_type)})</span>`;
+      } else {
+        applyNote = '<span style="color:var(--yellow)">Manual apply needed (custom ATS)</span>';
+      }
+
       html += `<tr class="detail-row"><td colspan="6">
         <div class="detail-grid">
           <div class="detail-section">
@@ -334,7 +366,8 @@ function renderJobs() {
             <p>${esc(j.tl_dr || j.reasoning || 'No evaluation yet')}</p>
             ${j.comp_estimate ? `<p style="margin-top:8px"><strong>Comp:</strong> ${esc(j.comp_estimate)}</p>` : ''}
             ${j.match_pct !== null && j.match_pct !== undefined ? `<p><strong>CV Match:</strong> ${j.match_pct}%</p>` : ''}
-            ${j.posting_url ? `<p style="margin-top:8px"><a class="detail-link" href="${j.posting_url}" target="_blank">View Job Posting</a></p>` : ''}
+            <p style="margin-top:8px">${applyNote}</p>
+            ${actions ? `<div class="action-buttons">${actions}</div>` : ''}
           </div>
           <div class="detail-section">
             <h4>Details</h4>
@@ -342,8 +375,6 @@ function renderJobs() {
             <p><strong>ATS:</strong> ${esc(j.ats_type || 'Unknown')}</p>
             <p><strong>Score (100):</strong> ${j.score_100 || '-'}</p>
             <p><strong>Seniority:</strong> ${esc(j.seniority || 'Unknown')}</p>
-            ${j.has_pdf ? '<p style="color:var(--green)">PDF Generated</p>' : ''}
-            ${j.has_report ? '<p style="color:var(--accent)">Report Available</p>' : ''}
             ${j.recommendation ? `<p><strong>Recommendation:</strong> ${esc(j.recommendation)}</p>` : ''}
           </div>
         </div>
