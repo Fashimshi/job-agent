@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-05-14T22:46:25.925283+00:00",
+  "generated_at": "2026-05-21T23:33:00.455841+00:00",
   "stats": {
-    "total_discovered": 1025,
+    "total_discovered": 1160,
     "total_scored": 704,
     "total_applied": 0,
     "avg_score": 75.2,
     "total_evaluated": 104,
     "status_counts": {
       "evaluated": 104,
-      "manual_needed": 120,
-      "failed": 30,
-      "discovered": 771
+      "manual_needed": 124,
+      "failed": 32,
+      "discovered": 900
     }
   },
   "jobs": [
@@ -1803,7 +1803,7 @@
       "score_100": 85,
       "score_5": 4.2,
       "archetype": "",
-      "status": "discovered",
+      "status": "failed",
       "recommendation": "",
       "tl_dr": "",
       "seniority": "",
@@ -1830,7 +1830,7 @@
       "score_100": 85,
       "score_5": 4.2,
       "archetype": "",
-      "status": "discovered",
+      "status": "failed",
       "recommendation": "",
       "tl_dr": "",
       "seniority": "",
@@ -18028,6 +18028,13 @@
     }
   ],
   "pipeline_history": [
+    {
+      "date": "2026-05-21",
+      "discovered": 135,
+      "scored": 0,
+      "evaluated": 0,
+      "applied": 0
+    },
     {
       "date": "2026-05-14",
       "discovered": 99,
