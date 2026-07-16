@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-07-09T23:00:41.010049+00:00",
+  "generated_at": "2026-07-16T22:39:25.610435+00:00",
   "stats": {
-    "total_discovered": 1923,
-    "total_scored": 1333,
+    "total_discovered": 2020,
+    "total_scored": 1406,
     "total_applied": 0,
     "avg_score": 75.1,
-    "total_evaluated": 205,
+    "total_evaluated": 220,
     "status_counts": {
-      "evaluated": 202,
-      "manual_needed": 229,
+      "evaluated": 217,
+      "manual_needed": 244,
       "failed": 32,
-      "discovered": 1460
+      "discovered": 1527
     }
   },
   "jobs": [
@@ -13353,38 +13353,11 @@
       "reasoning": "The candidate possesses strong skills in machine learning and Python, which are essential for the role, and has relevant experience in NLP and LLM systems. Although they are relatively new to the workforce, their current position as a Data Scientist and previous internships provide a solid foundation for the seniority level required. Overall, the candidate is a strong match for the Senior LLM Engineer position."
     },
     {
-      "id": "64fd20b1-b664-4f2e-a28a-7cc5e34a8223",
-      "company": "Vforce Infotech",
-      "title": "Generative AI Engineer",
-      "score_100": 82,
-      "score_5": 4.1,
-      "archetype": "",
-      "status": "discovered",
-      "recommendation": "",
-      "tl_dr": "",
-      "seniority": "",
-      "remote": null,
-      "comp_estimate": "",
-      "match_pct": null,
-      "has_evaluation": false,
-      "has_pdf": false,
-      "pdf_path": null,
-      "has_report": false,
-      "report_path": null,
-      "can_auto_apply": false,
-      "applied_at": null,
-      "discovered_at": "2026-07-09T22:52:44.110146+00:00",
-      "posting_url": "https://www.indeed.com/viewjob?jk=1dc37251158bc972&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
-      "location": "Edison, NJ",
-      "ats_type": "unknown",
-      "reasoning": "The candidate possesses a strong skill set in generative AI, machine learning, and natural language processing, aligning well with the job requirements. However, while they have relevant experience, they are relatively new to the field, which may impact their fit for a mid-level position. Overall, their skills and recent experience in AI projects contribute to a solid match."
-    },
-    {
-      "id": "0beba46d-230d-4317-b321-29c30457e5ed",
-      "company": "Thomson Reuters",
-      "title": "Applied Scientist",
-      "score_100": 80,
-      "score_5": 4.0,
+      "id": "197ddf19-4628-4a4b-97b4-ac46a1977a5e",
+      "company": "Nuvative",
+      "title": "Data Scientist",
+      "score_100": 85,
+      "score_5": 4.2,
       "archetype": "",
       "status": "manual_needed",
       "recommendation": "",
@@ -13400,45 +13373,18 @@
       "report_path": null,
       "can_auto_apply": false,
       "applied_at": null,
-      "discovered_at": "2026-04-07T01:23:12.098567+00:00",
-      "posting_url": "https://www.linkedin.com/jobs/view/applied-scientist-at-thomson-reuters-4392460796",
-      "location": "Frisco, TX",
+      "discovered_at": "2026-07-16T22:31:30.178993+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/data-scientist-at-nuvative-4438366322",
+      "location": "Wichita, KS",
       "ats_type": "unknown",
-      "reasoning": "The candidate possesses strong skills in NLP and LLM systems, which align well with the role of an Applied Scientist. Their recent experience as a Data Scientist and relevant projects demonstrate a solid foundation, although the lack of specific years of experience and seniority details in the job description limits the overall score."
+      "reasoning": "The candidate possesses a strong set of required skills such as data analysis, machine learning, SQL, and Python, along with relevant experience in data science roles. They have recently completed a Master's degree and have over a year of professional experience, aligning well with the mid-seniority level required for the position. However, they lack specific experience in finance and loan underwriting, which slightly lowers their overall match."
     },
     {
-      "id": "64674338-ce2b-4b82-a68e-5566a26ca497",
-      "company": "Clover Health",
-      "title": "Senior ML Engineer Health AI/NLP Platform (Remote) (Hiring Immediately)",
-      "score_100": 80,
-      "score_5": 4.0,
-      "archetype": "",
-      "status": "discovered",
-      "recommendation": "",
-      "tl_dr": "",
-      "seniority": "",
-      "remote": null,
-      "comp_estimate": "",
-      "match_pct": null,
-      "has_evaluation": false,
-      "has_pdf": false,
-      "pdf_path": null,
-      "has_report": false,
-      "report_path": null,
-      "can_auto_apply": false,
-      "applied_at": null,
-      "discovered_at": "2026-06-18T23:20:46.882867+00:00",
-      "posting_url": "https://www.jobleads.com/us/job/senior-python-engineer-open-source-ml-tools-remote--new-york--efee665e8e24f5d4007004cac38e8d0a8?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
-      "location": "New York, NY",
-      "ats_type": "unknown",
-      "reasoning": "The candidate possesses a strong skill set in machine learning and natural language processing, with relevant experience in deploying LLM systems. However, they have less than the required five years of experience and lack direct healthcare experience, which impacts their overall match. Their current role and projects indicate a solid foundation for a senior position, but they may need more time to fully align with the seniority expectations."
-    },
-    {
-      "id": "64d652f0-32c8-42c0-a994-6cde5a73cce7",
-      "company": "Air Apps",
-      "title": "AI/ML Engineer",
-      "score_100": 80,
-      "score_5": 4.0,
+      "id": "028e32c1-e43f-45a0-85f8-9c7c9ec23bb0",
+      "company": "Nestlé Purina North America",
+      "title": "Data Scientist",
+      "score_100": 85,
+      "score_5": 4.2,
       "archetype": "",
       "status": "manual_needed",
       "recommendation": "",
@@ -13454,20 +13400,47 @@
       "report_path": null,
       "can_auto_apply": false,
       "applied_at": null,
-      "discovered_at": "2026-07-02T22:38:40.474417+00:00",
-      "posting_url": "https://www.linkedin.com/jobs/view/ai-ml-engineer-at-air-apps-4427382532",
-      "location": "San Francisco, CA",
+      "discovered_at": "2026-07-16T22:31:30.179707+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/data-scientist-at-nestl%C3%A9-purina-north-america-4441277872",
+      "location": "St Louis, MO",
       "ats_type": "unknown",
-      "reasoning": "The candidate possesses strong skills in data science and NLP, which are relevant to the AI/ML Engineer position, leading to a high skill score. Their recent experience in a similar role at Walmart and a solid educational background support a good match, though the lack of specific years of experience and seniority details in the job description slightly lowers the overall score."
+      "reasoning": "The candidate possesses a strong skill set that aligns well with the required and preferred skills for the Data Scientist role, particularly in Python, SQL, and machine learning. They have relevant experience as a Data Scientist and have worked on projects that demonstrate their ability to develop and deploy models, meeting the job's experience requirements. Their recent education and current role indicate they are at a suitable seniority level for a mid-level position."
     },
     {
-      "id": "eabe3d99-747f-4a1c-b30e-870301c73ec4",
-      "company": "Cloudflare",
+      "id": "76074736-7915-411a-bbc6-51dbac225d37",
+      "company": "Ulta Beauty",
+      "title": "Data Scientist",
+      "score_100": 85,
+      "score_5": 4.2,
+      "archetype": "",
+      "status": "manual_needed",
+      "recommendation": "",
+      "tl_dr": "",
+      "seniority": "",
+      "remote": null,
+      "comp_estimate": "",
+      "match_pct": null,
+      "has_evaluation": false,
+      "has_pdf": false,
+      "pdf_path": null,
+      "has_report": false,
+      "report_path": null,
+      "can_auto_apply": false,
+      "applied_at": null,
+      "discovered_at": "2026-07-16T22:31:30.181579+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/data-scientist-at-ulta-beauty-4431454958",
+      "location": "Bolingbrook, IL",
+      "ats_type": "unknown",
+      "reasoning": "The candidate possesses a strong set of relevant skills, including data science, machine learning, and Python, but lacks explicit experience with Scikit-Learn, NumPy, and SciPy. They have more than two years of experience in data science roles, which aligns well with the job requirements, and their recent master's education in IT/CS is highly relevant. Overall, the candidate is a strong match for the mid-level position."
+    },
+    {
+      "id": "f2b53e9a-6759-43b2-be87-4265706915d1",
+      "company": "Evlo AI",
       "title": "Machine Learning Engineer",
-      "score_100": 78,
-      "score_5": 3.9,
+      "score_100": 85,
+      "score_5": 4.2,
       "archetype": "",
-      "status": "discovered",
+      "status": "manual_needed",
       "recommendation": "",
       "tl_dr": "",
       "seniority": "",
@@ -13479,22 +13452,22 @@
       "pdf_path": null,
       "has_report": false,
       "report_path": null,
-      "can_auto_apply": true,
+      "can_auto_apply": false,
       "applied_at": null,
-      "discovered_at": "2026-04-06T21:59:51.268133+00:00",
-      "posting_url": "https://boards.greenhouse.io/cloudflare/jobs/7603839",
-      "location": "Hybrid",
-      "ats_type": "greenhouse",
-      "reasoning": "The candidate possesses strong skills in machine learning and AI-driven applications, particularly with LLMs, which align well with the job requirements. However, they have less than the required 3 years of full-time experience, which slightly lowers their experience score. Their current role as a Data Scientist and relevant projects indicate a good fit for the mid-seniority level."
+      "discovered_at": "2026-07-16T22:31:30.183142+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/machine-learning-engineer-at-evlo-ai-4440253398",
+      "location": "Los Angeles, CA",
+      "ats_type": "unknown",
+      "reasoning": "The candidate possesses a strong skill set in data science and machine learning, particularly in NLP and LLM systems, which aligns well with the typical requirements for a Machine Learning Engineer. They have relevant experience, including a recent role as a Data Scientist and an internship, though the specific years of experience are not detailed. Their educational background in IT/CS and Mechanical Engineering also supports their technical capabilities, making them a strong fit for the role."
     },
     {
-      "id": "f1178a8e-bfee-414f-a5bb-4ced3826b7bd",
-      "company": "Coinbase",
-      "title": "Senior Data Scientist - Product",
-      "score_100": 78,
-      "score_5": 3.9,
+      "id": "9fe4856e-3858-413f-8bf2-0dbcda5408ea",
+      "company": "Avride",
+      "title": "Machine Learning Engineer",
+      "score_100": 85,
+      "score_5": 4.2,
       "archetype": "",
-      "status": "discovered",
+      "status": "manual_needed",
       "recommendation": "",
       "tl_dr": "",
       "seniority": "",
@@ -13506,16 +13479,703 @@
       "pdf_path": null,
       "has_report": false,
       "report_path": null,
-      "can_auto_apply": true,
+      "can_auto_apply": false,
       "applied_at": null,
-      "discovered_at": "2026-04-06T21:59:51.269434+00:00",
-      "posting_url": "https://boards.greenhouse.io/coinbase/jobs/6969295",
-      "location": "Remote - USA",
-      "ats_type": "greenhouse",
-      "reasoning": "The candidate possesses strong skills in SQL, Python, and machine learning, aligning well with the job's requirements. However, they have less than the preferred 5 years of experience and are currently at a junior to mid-level position, which may not fully meet the seniority expectations for the role. Overall, they demonstrate a solid match but may need more experience to be considered a perfect fit."
+      "discovered_at": "2026-07-16T22:31:30.184141+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/machine-learning-engineer-at-avride-4439848193",
+      "location": "Austin, TX",
+      "ats_type": "unknown",
+      "reasoning": "The candidate possesses strong skills in machine learning and NLP, which align well with the job title of Machine Learning Engineer. They have relevant experience, including a recent role as a Data Scientist focused on NLP systems, but the lack of specified years of experience in the job description makes it difficult to assess the experience score fully. Overall, the candidate is a strong match for the role."
+    },
+    {
+      "id": "95874af1-b6bf-4655-b99d-5c26ca6d689b",
+      "company": "WorkGenius Group",
+      "title": "NLP Engineer",
+      "score_100": 85,
+      "score_5": 4.2,
+      "archetype": "",
+      "status": "manual_needed",
+      "recommendation": "",
+      "tl_dr": "",
+      "seniority": "",
+      "remote": null,
+      "comp_estimate": "",
+      "match_pct": null,
+      "has_evaluation": false,
+      "has_pdf": false,
+      "pdf_path": null,
+      "has_report": false,
+      "report_path": null,
+      "can_auto_apply": false,
+      "applied_at": null,
+      "discovered_at": "2026-07-16T22:31:30.184728+00:00",
+      "posting_url": "https://www.linkedin.com/jobs/view/nlp-engineer-at-workgenius-group-4436610766",
+      "location": "Atlanta Metropolitan Area",
+      "ats_type": "unknown",
+      "reasoning": "The candidate has strong skills in NLP and LLM systems, which align well with the requirements of an NLP Engineer. They possess relevant experience as a Data Scientist in a similar domain, although the specific years of experience are not detailed. Their recent education and work experience suggest they are at an appropriate career stage for the role."
     }
   ],
   "story_bank": [
+    {
+      "title": "Unsupervised NLP Pipeline Development",
+      "situation": "Walmart's chatbot query coverage was limited.",
+      "task": "Expand query coverage using NLP techniques.",
+      "action": "Developed an unsupervised NLP pipeline with DBSCAN clustering.",
+      "result": "Expanded query coverage from 15% to 74%.",
+      "reflection": "Learned the value of unsupervised techniques in NLP applications.",
+      "tags": [
+        "Grounding in NLP and machine learning"
+      ]
+    },
+    {
+      "title": "Prompt Engineering for LLM Evaluation",
+      "situation": "Walmart needed to assess search quality and product relevance.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Developed frameworks for search quality assessment.",
+      "result": "Drove measurable improvements in ranking precision.",
+      "reflection": "Gained insights into the impact of prompt engineering on AI outcomes.",
+      "tags": [
+        "Experience with prompt writing for various use cases"
+      ]
+    },
+    {
+      "title": "LLM Guardrail Infrastructure",
+      "situation": "Ensuring responsible AI compliance was critical for Walmart's platform.",
+      "task": "Build guardrail infrastructure using LLM judges.",
+      "action": "Implemented real-time safety enforcement and hallucination detection.",
+      "result": "Ensured compliance for 10M+ users.",
+      "reflection": "Reinforced the need for robust safety measures in AI systems.",
+      "tags": [
+        "Experience with LLM guardrails"
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System Deployment",
+      "situation": "Walmart needed a scalable LLM system for their conversational platform.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Orchestrated intelligent search and personalized recommendations for 20M+ users.",
+      "result": "Improved ranking precision across product categories.",
+      "reflection": "Learned the importance of scalable architecture in LLM deployment.",
+      "tags": [
+        "Experience with generative solutions released to prod, at scale"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Walmart's chatbot needed expanded query coverage.",
+      "task": "Develop unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Learned the power of unsupervised methods in NLP.",
+      "tags": [
+        "NLP and Conversational AI."
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure",
+      "situation": "Need for real-time safety enforcement and hallucination detection.",
+      "task": "Build production guardrail infrastructure.",
+      "action": "Implemented LLM judges on GCP and Element Gateway.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Understood the critical role of safety in AI deployments.",
+      "tags": [
+        "Build cloud-native AI solutions using Google Cloud Platform services."
+      ]
+    },
+    {
+      "title": "LLM Evaluation Frameworks",
+      "situation": "Walmart required better evaluation frameworks for search quality.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Implemented frameworks for search quality and product relevance assessment.",
+      "result": "Drove measurable improvements in ranking precision across product categories.",
+      "reflection": "Realized the impact of precise evaluation on overall system performance.",
+      "tags": [
+        "Strong knowledge of Generative AI and RAG architectures."
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System Deployment",
+      "situation": "Walmart needed to enhance its conversational shopping platform.",
+      "task": "Contribute to the design and deployment of a multi-agent LLM system.",
+      "action": "Orchestrated intelligent search, guided discovery, and personalized recommendations.",
+      "result": "Served 20M+ monthly active users with improved search quality.",
+      "reflection": "Learned the importance of scalability and user-centric design in AI systems.",
+      "tags": [
+        "Design and develop conversational AI solutions using Dialogflow CX/ES."
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Limited chatbot query coverage.",
+      "task": "Develop an unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded query coverage from 15% to 74%.",
+      "reflection": "Learned the importance of unsupervised methods in expanding coverage.",
+      "tags": [
+        "Familiarity with latest retrieval research"
+      ]
+    },
+    {
+      "title": "Fallback Detection System",
+      "situation": "High volume of fallback queries impacting system performance.",
+      "task": "Engineer a fallback detection system.",
+      "action": "Used semantic clustering to classify queries into intent clusters.",
+      "result": "Improved diagnostic accuracy by 6%.",
+      "reflection": "Understood the value of precise clustering in NLP tasks.",
+      "tags": [
+        "Experience running proper ablation studies and benchmarks"
+      ]
+    },
+    {
+      "title": "AI Rule-Generation Engine",
+      "situation": "Needed to automate transaction categorization in QuickBooks.",
+      "task": "Build an AI rule-generation engine.",
+      "action": "Integrated multiple Transformer models with QuickBooks API.",
+      "result": "Achieved 92% precision and reduced manual rule creation by 70%.",
+      "reflection": "Realized the impact of multi-task fusion architecture on efficiency.",
+      "tags": [
+        "Strong Python, PyTorch, Hugging Face Transformers"
+      ]
+    },
+    {
+      "title": "Optimizing Multi-Agent LLM System",
+      "situation": "Walmart's conversational platform needed optimization for better user experience.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Contributed to the design and deployment, orchestrating intelligent search and personalized recommendations.",
+      "result": "Improved ranking precision across product categories for 20M+ users.",
+      "reflection": "Learned the importance of integrating user feedback into system design.",
+      "tags": [
+        "Deep hands-on experience building and optimizing RAG pipelines"
+      ]
+    },
+    {
+      "title": "AI Agent-Based Event Title Generator",
+      "situation": "Need for personalized event titles in shopping experience.",
+      "task": "Develop an AI agent-based generator.",
+      "action": "Leveraged LLM function calling to trigger internal APIs and generate titles.",
+      "result": "Enhanced user experience with personalized titles.",
+      "reflection": "Learned the importance of personalization in user engagement.",
+      "tags": [
+        "Experience with agents framework"
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure Development",
+      "situation": "Ensuring AI compliance for Walmart's platform.",
+      "task": "Build guardrail infrastructure.",
+      "action": "Implemented real-time safety enforcement and hallucination detection.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Understood the critical role of safety in AI deployment.",
+      "tags": [
+        "Experience with responsible AI"
+      ]
+    },
+    {
+      "title": "LLM-as-Judge Evaluation Framework",
+      "situation": "Walmart required improved search quality and product relevance.",
+      "task": "Design an evaluation framework using LLMs.",
+      "action": "Designed prompt-tuned LLM-as-judge evaluation frameworks.",
+      "result": "Drove measurable improvements in ranking precision.",
+      "reflection": "Realized the impact of precise evaluation on product quality.",
+      "tags": [
+        "Experience in Fine Tuning LLMs"
+      ]
+    },
+    {
+      "title": "Deploying Multi-Agent LLM System",
+      "situation": "Walmart needed a conversational platform for shopping.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Contributed to the design and deployment of the system, orchestrating intelligent search and personalized recommendations.",
+      "result": "Served 20M+ monthly active users, improving ranking precision across product categories.",
+      "reflection": "Learned the importance of scalable architecture in AI systems.",
+      "tags": [
+        "Experience with building and deploying LLMs or NLP applications"
+      ]
+    },
+    {
+      "title": "NLP Pipeline Expansion",
+      "situation": "Chatbot query coverage needed expansion.",
+      "task": "Develop unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Learned the value of unsupervised methods in NLP.",
+      "tags": [
+        "Experience deploying and operating LLM services"
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure",
+      "situation": "Ensuring responsible AI compliance was critical.",
+      "task": "Build production guardrail infrastructure.",
+      "action": "Implemented real-time safety enforcement and hallucination detection.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Understood the critical role of safety in AI systems.",
+      "tags": [
+        "Build and maintain Retrieval-Augmented Generation (RAG) QA/search systems"
+      ]
+    },
+    {
+      "title": "Prompt Engineering Framework",
+      "situation": "Needed to improve search quality and product relevance.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Implemented frameworks for search quality and product relevance assessment.",
+      "result": "Drove measurable improvements in ranking precision across product categories.",
+      "reflection": "Recognized the impact of precise prompt engineering on model performance.",
+      "tags": [
+        "Optimize prompt design"
+      ]
+    },
+    {
+      "title": "LLM System Deployment",
+      "situation": "Walmart's conversational shopping platform needed an LLM system.",
+      "task": "Design and deploy a production multi-agent LLM system.",
+      "action": "Contributed to the design and deployment, orchestrating intelligent search and recommendations.",
+      "result": "Served 20M+ monthly active users, improving search and recommendation precision.",
+      "reflection": "Learned the importance of scalable and efficient LLM architectures.",
+      "tags": [
+        "Develop and refine Large Language Models (LLMs)"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Expand chatbot query coverage.",
+      "task": "Develop unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded query coverage from 15% to 74%.",
+      "reflection": "Learned the impact of unsupervised methods in NLP.",
+      "tags": [
+        "NLP / information-extraction background."
+      ]
+    },
+    {
+      "title": "Reverse-Engineering Patterns",
+      "situation": "Needed to improve product relevance assessment.",
+      "task": "Reverse-engineer patterns for evaluation frameworks.",
+      "action": "Designed frameworks for product relevance assessment.",
+      "result": "Drove improvements in ranking precision across categories.",
+      "reflection": "Reinforced the value of pattern recognition in AI.",
+      "tags": [
+        "Strong at reverse-engineering patterns from examples."
+      ]
+    },
+    {
+      "title": "Real-Time Safety Enforcement",
+      "situation": "Needed to ensure responsible AI compliance.",
+      "task": "Implement real-time safety enforcement.",
+      "action": "Built guardrail infrastructure using LLM judges.",
+      "result": "Ensured compliance for 10M+ users.",
+      "reflection": "Gained insights into real-time AI safety mechanisms.",
+      "tags": [
+        "Experience with faithfulness, groundedness, or hallucination checks."
+      ]
+    },
+    {
+      "title": "LLM Evaluation Framework",
+      "situation": "Tasked with improving search quality at Walmart.",
+      "task": "Design an LLM-as-judge evaluation framework.",
+      "action": "Developed prompt-tuned frameworks for search quality assessment.",
+      "result": "Achieved measurable improvements in ranking precision.",
+      "reflection": "Learned the importance of precise prompt engineering.",
+      "tags": [
+        "Hands-on with modern LLMs"
+      ]
+    },
+    {
+      "title": "LLM Router Optimization",
+      "situation": "High latency in LLM router architecture.",
+      "task": "Optimize architecture.",
+      "action": "Applied prompt engineering and query decomposition.",
+      "result": "Improved task-selection accuracy by 4% and reduced latency by 18%.",
+      "reflection": "Learned the impact of architectural optimizations on performance.",
+      "tags": [
+        "optimize models"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Low chatbot query coverage.",
+      "task": "Develop NLP pipeline for topic modeling.",
+      "action": "Used DBSCAN clustering for intent extraction.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Realized the power of unsupervised learning in expanding capabilities.",
+      "tags": [
+        "train and optimize models"
+      ]
+    },
+    {
+      "title": "Production Guardrail Infrastructure",
+      "situation": "Need for real-time safety enforcement in AI systems.",
+      "task": "Build guardrail infrastructure.",
+      "action": "Implemented prompt-tuned LLM judges on GCP and Element Gateway.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Gained insights into the critical role of infrastructure in AI safety.",
+      "tags": [
+        "maintain inference services"
+      ]
+    },
+    {
+      "title": "Enhancing Search Precision",
+      "situation": "Walmart's conversational shopping platform needed improved search precision.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Implemented frameworks for search quality and product relevance assessment.",
+      "result": "Drove measurable improvements in ranking precision across product categories.",
+      "reflection": "Learned the importance of precise evaluation frameworks in enhancing user experience.",
+      "tags": [
+        "enhance search and user experience"
+      ]
+    },
+    {
+      "title": "AI-Powered Financial Rule Automation",
+      "situation": "Manual rule creation was inefficient.",
+      "task": "Automate rule generation.",
+      "action": "Built AI rule-generation engine with Transformer models.",
+      "result": "Reduced manual rule creation by 70%.",
+      "reflection": "Understood the impact of automation in financial processes.",
+      "tags": [
+        "Experience with ML algorithms"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline Expansion",
+      "situation": "Chatbot query coverage was limited.",
+      "task": "Expand query coverage using NLP.",
+      "action": "Developed unsupervised NLP pipeline using DBSCAN clustering.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Learned the power of unsupervised methods in NLP.",
+      "tags": [
+        "Experience with NLP and ML algorithms"
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure for Responsible AI",
+      "situation": "Need for real-time safety enforcement in AI systems.",
+      "task": "Build guardrail infrastructure.",
+      "action": "Implemented real-time safety enforcement and hallucination detection.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Gained insights into the challenges of real-time AI safety.",
+      "tags": [
+        "Ensure responsible AI compliance"
+      ]
+    },
+    {
+      "title": "Improving Search Quality with LLM",
+      "situation": "Walmart's conversational platform needed improved search precision.",
+      "task": "Design an evaluation framework for search quality.",
+      "action": "Designed prompt-tuned LLM-as-judge evaluation frameworks.",
+      "result": "Drove measurable improvements in ranking precision across product categories.",
+      "reflection": "Learned the importance of prompt tuning in LLM evaluation.",
+      "tags": [
+        "Experience with NLP and ML algorithms"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Limited chatbot query coverage at Walmart.",
+      "task": "Develop an unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Realized the power of unsupervised learning in expanding system capabilities.",
+      "tags": [
+        "Develop text classification, summarization, entity recognition, and semantic search capabilities"
+      ]
+    },
+    {
+      "title": "Fallback Detection System",
+      "situation": "High volume of fallback queries at Walmart's platform.",
+      "task": "Engineer a Transformer-based fallback detection system.",
+      "action": "Used semantic clustering to classify 100K+ daily fallback queries.",
+      "result": "Improved diagnostic accuracy by 6%.",
+      "reflection": "Learned the importance of semantic understanding in query classification.",
+      "tags": [
+        "Experience with Hugging Face Transformers, LangChain, or similar NLP frameworks"
+      ]
+    },
+    {
+      "title": "Prompt-Tuned LLM Evaluation Frameworks",
+      "situation": "Needed to assess search quality and product relevance at Walmart.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Implemented frameworks for search quality and product relevance assessment.",
+      "result": "Drove measurable improvements in ranking precision across product categories.",
+      "reflection": "Gained insights into the impact of precise evaluation metrics on system performance.",
+      "tags": [
+        "Evaluate model performance and optimize accuracy"
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System Deployment",
+      "situation": "Walmart's conversational shopping platform needed a robust NLP system.",
+      "task": "Contribute to the design and deployment of a production multi-agent LLM system.",
+      "action": "Orchestrated intelligent search, guided discovery, and personalized recommendations.",
+      "result": "Served 20M+ monthly active users, enhancing user engagement and satisfaction.",
+      "reflection": "Learned the importance of scalable architecture in handling large user bases.",
+      "tags": [
+        "Design and develop NLP and large language model solutions"
+      ]
+    },
+    {
+      "title": "AI Rule-Generation Engine",
+      "situation": "Manual rule creation was inefficient.",
+      "task": "Automate rule generation.",
+      "action": "Built an engine integrating multiple Transformer models.",
+      "result": "Reduced manual rule creation by 70%.",
+      "reflection": "Understood the power of automation in increasing efficiency.",
+      "tags": [
+        "Experience with machine learning models"
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure",
+      "situation": "Need for real-time safety enforcement at Walmart.",
+      "task": "Implement guardrail infrastructure.",
+      "action": "Built infrastructure using prompt-tuned LLM judges.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Learned the critical role of safety in AI systems.",
+      "tags": [
+        "Experience with LLMs"
+      ]
+    },
+    {
+      "title": "Fallback Detection System",
+      "situation": "High volume of fallback queries at Walmart.",
+      "task": "Improve fallback detection accuracy.",
+      "action": "Engineered a Transformer-based system using semantic clustering.",
+      "result": "Improved diagnostic accuracy by 6%.",
+      "reflection": "Gained insights into the nuances of query classification.",
+      "tags": [
+        "Strong coding skills in Python"
+      ]
+    },
+    {
+      "title": "LLM System Deployment",
+      "situation": "Walmart needed a scalable LLM system for their conversational platform.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Led the design and deployment of the system, orchestrating intelligent search and personalized recommendations.",
+      "result": "Served 20M+ monthly active users, improving ranking precision.",
+      "reflection": "Learned the importance of robust infrastructure in scaling AI solutions.",
+      "tags": [
+        "Experience developing and productionizing machine learning models"
+      ]
+    },
+    {
+      "title": "AI-Powered Financial Rule Automation",
+      "situation": "Needed to reduce manual rule creation in financial systems.",
+      "task": "Build AI rule-generation engine.",
+      "action": "Integrated Transformer models with QuickBooks API for rule automation.",
+      "result": "Achieved 92% precision and reduced manual rule creation by 70%.",
+      "reflection": "Realized the efficiency gains from automation in financial processes.",
+      "tags": [
+        "Optimizing dashboard performance"
+      ]
+    },
+    {
+      "title": "Production Guardrail Infrastructure",
+      "situation": "Needed to ensure responsible AI compliance.",
+      "task": "Build guardrail infrastructure for AI systems.",
+      "action": "Implemented real-time safety enforcement and hallucination detection.",
+      "result": "Ensured compliance for 10M+ users.",
+      "reflection": "Learned the importance of safety in AI systems.",
+      "tags": [
+        "Ensuring data accuracy"
+      ]
+    },
+    {
+      "title": "LLM Evaluation Frameworks",
+      "situation": "Walmart needed improved search quality and product relevance assessment.",
+      "task": "Design LLM-as-judge evaluation frameworks.",
+      "action": "Implemented prompt-tuned LLM frameworks for search quality assessment.",
+      "result": "Drove measurable improvements in ranking precision.",
+      "reflection": "Gained insights into the impact of LLMs on search relevance.",
+      "tags": [
+        "Strong use of LLMs"
+      ]
+    },
+    {
+      "title": "Automated Evaluation Dashboards",
+      "situation": "Needed to improve real-time monitoring of AI systems.",
+      "task": "Build automated evaluation dashboards.",
+      "action": "Used SQL and Python to create dashboards for precision, recall, and prompt drift.",
+      "result": "Reduced experimentation cycles by 30%.",
+      "reflection": "Learned the importance of real-time data in decision-making.",
+      "tags": [
+        "Developing automated processes for data collection and visualization"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline Development",
+      "situation": "Low chatbot query coverage.",
+      "task": "Expand query coverage using NLP techniques.",
+      "action": "Developed unsupervised NLP pipeline using DBSCAN clustering.",
+      "result": "Expanded chatbot query coverage from 15% to 74%.",
+      "reflection": "Realized the impact of unsupervised learning on AI performance.",
+      "tags": [
+        "Experience designing experiments, selecting appropriate measures, and interpreting statistical results."
+      ]
+    },
+    {
+      "title": "AI Agent-Based Event Title Generator",
+      "situation": "Need for personalized event titles in shopping experience.",
+      "task": "Develop an AI agent-based Event Title Generator.",
+      "action": "Leveraged LLM function calling to generate personalized titles.",
+      "result": "Enhanced user experience with autonomous title generation.",
+      "reflection": "Learned the value of user intent mapping in AI applications.",
+      "tags": [
+        "Experience evaluating generative AI applications, large language models, agentic systems, or other AI-enabled solutions."
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure for Responsible AI",
+      "situation": "Ensuring safety and compliance in AI systems.",
+      "task": "Build guardrail infrastructure for real-time safety enforcement.",
+      "action": "Implemented prompt-tuned LLM judges on GCP.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Gained insights into real-time AI safety mechanisms.",
+      "tags": [
+        "Knowledge of Responsible AI concepts, including fairness, bias, explainability, transparency, hallucination, safety, reliability, and robustness."
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System Deployment",
+      "situation": "Walmart needed a robust conversational shopping platform.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Orchestrated intelligent search and personalized recommendations for 20M+ users.",
+      "result": "Improved ranking precision across product categories.",
+      "reflection": "Learned the importance of aligning AI systems with business goals.",
+      "tags": [
+        "Experience evaluating generative AI applications, large language models, agentic systems, or other AI-enabled solutions."
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Limited chatbot query coverage.",
+      "task": "Develop an unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded query coverage from 15% to 74%.",
+      "reflection": "Realized the potential of unsupervised methods in NLP.",
+      "tags": [
+        "Build models to enhance capabilities."
+      ]
+    },
+    {
+      "title": "AI Agent-Based Event Title Generator",
+      "situation": "Need for personalized event titles in the shopping experience.",
+      "task": "Develop an AI agent-based Event Title Generator.",
+      "action": "Leveraged LLM function calling to generate personalized titles.",
+      "result": "Enhanced user engagement with personalized experiences.",
+      "reflection": "Learned the impact of personalization on user satisfaction.",
+      "tags": [
+        "Develop prediction systems and machine learning algorithms."
+      ]
+    },
+    {
+      "title": "Fallback Detection System",
+      "situation": "High volume of fallback queries at Walmart.",
+      "task": "Engineer a fallback detection system.",
+      "action": "Used semantic clustering to classify queries into intent clusters.",
+      "result": "Improved diagnostic accuracy by 6%.",
+      "reflection": "Gained insights into the value of semantic clustering in NLP.",
+      "tags": [
+        "Collect, preprocess, and analyze structured and unstructured data."
+      ]
+    },
+    {
+      "title": "Improving Search Quality",
+      "situation": "Walmart's conversational shopping platform needed improved search quality.",
+      "task": "Design prompt-tuned LLM-as-judge evaluation frameworks.",
+      "action": "Implemented frameworks for search quality and product relevance assessment.",
+      "result": "Improved ranking precision across product categories.",
+      "reflection": "Learned the importance of precise evaluation in enhancing user experience.",
+      "tags": [
+        "Develop data models to enhance capabilities."
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline",
+      "situation": "Chatbot query coverage was limited at Walmart.",
+      "task": "Expand chatbot query coverage.",
+      "action": "Developed unsupervised NLP pipeline using DBSCAN clustering.",
+      "result": "Increased coverage from 15% to 74%.",
+      "reflection": "Learned the value of unsupervised methods in NLP applications.",
+      "tags": [
+        "Experience with NLP, computer vision, or LLM-based workflows"
+      ]
+    },
+    {
+      "title": "Event Title Generator",
+      "situation": "Walmart needed personalized event titles for shopping experiences.",
+      "task": "Develop an AI agent-based Event Title Generator.",
+      "action": "Leveraged LLM function calling to trigger internal APIs.",
+      "result": "Generated personalized titles, enhancing user engagement.",
+      "reflection": "Understood the impact of personalization in AI-driven platforms.",
+      "tags": [
+        "Integrating AI/ML solutions into production-ready APIs"
+      ]
+    },
+    {
+      "title": "Guardrail Infrastructure Development",
+      "situation": "Need for real-time safety enforcement in AI systems.",
+      "task": "Build production guardrail infrastructure.",
+      "action": "Implemented LLM judges on GCP for safety and hallucination detection.",
+      "result": "Ensured responsible AI compliance for 10M+ users.",
+      "reflection": "Recognized the critical role of ethical AI practices.",
+      "tags": [
+        "Familiarity with cloud platforms (AWS, GCP, or Azure)"
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System Deployment",
+      "situation": "Walmart's conversational shopping platform needed an advanced LLM system.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Orchestrated intelligent search, guided discovery, and personalized recommendations.",
+      "result": "Served 20M+ monthly active users, improving ranking precision.",
+      "reflection": "Learned the importance of scalable AI solutions in enhancing user experience.",
+      "tags": [
+        "Experience with NLP, computer vision, or LLM-based workflows"
+      ]
+    },
+    {
+      "title": "Unsupervised NLP Pipeline Development",
+      "situation": "Needed to expand chatbot query coverage.",
+      "task": "Develop an unsupervised NLP pipeline.",
+      "action": "Used DBSCAN clustering for topic modeling and intent extraction.",
+      "result": "Expanded query coverage from 15% to 74%.",
+      "reflection": "Understood the impact of unsupervised learning on NLP tasks.",
+      "tags": [
+        "Experience with machine learning operations tooling and model deployment frameworks"
+      ]
+    },
+    {
+      "title": "LLM-as-Judge Evaluation Framework",
+      "situation": "Walmart required improved search quality assessment.",
+      "task": "Design an evaluation framework for search quality.",
+      "action": "Created prompt-tuned LLM-as-judge frameworks.",
+      "result": "Drove measurable improvements in ranking precision.",
+      "reflection": "Recognized the value of prompt engineering in AI evaluation.",
+      "tags": [
+        "Ability to build and maintain scalable data pipelines"
+      ]
+    },
+    {
+      "title": "AI-Powered Financial Rule Automation",
+      "situation": "Needed to automate transaction categorization in QuickBooks.",
+      "task": "Build an AI rule-generation engine.",
+      "action": "Integrated Transformer models with QuickBooks API.",
+      "result": "Achieved 92% precision, reducing manual rule creation by 70%.",
+      "reflection": "Gained insights into financial data processing and automation.",
+      "tags": [
+        "Experience supporting finance, financial planning and analysis, or enterprise strategy use cases"
+      ]
+    },
+    {
+      "title": "Multi-Agent LLM System for Walmart",
+      "situation": "Walmart needed a scalable conversational AI platform.",
+      "task": "Design and deploy a multi-agent LLM system.",
+      "action": "Led the design and deployment, orchestrating intelligent search and personalized recommendations.",
+      "result": "Served 20M+ monthly active users, improving search quality and product relevance.",
+      "reflection": "Learned the importance of robust evaluation frameworks in AI systems.",
+      "tags": [
+        "Experience developing generative artificial intelligence or large language model solutions"
+      ]
+    },
     {
       "title": "Unsupervised NLP Pipeline",
       "situation": "Limited chatbot query coverage at Walmart.",
@@ -22417,6 +23077,13 @@
     }
   ],
   "pipeline_history": [
+    {
+      "date": "2026-07-16",
+      "discovered": 97,
+      "scored": 73,
+      "evaluated": 15,
+      "applied": 0
+    },
     {
       "date": "2026-07-09",
       "discovered": 109,
