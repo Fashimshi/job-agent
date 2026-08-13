@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-07T01:44:54.183637+00:00",
+  "generated_at": "2026-08-13T22:51:40.370749+00:00",
   "stats": {
-    "total_discovered": 2323,
+    "total_discovered": 2432,
     "total_scored": 1481,
     "total_applied": 0,
     "avg_score": 75.1,
     "total_evaluated": 235,
     "status_counts": {
       "evaluated": 232,
-      "manual_needed": 266,
+      "manual_needed": 269,
       "failed": 32,
-      "discovered": 1793
+      "discovered": 1899
     }
   },
   "jobs": [
@@ -23726,6 +23726,13 @@
     }
   ],
   "pipeline_history": [
+    {
+      "date": "2026-08-13",
+      "discovered": 109,
+      "scored": 0,
+      "evaluated": 0,
+      "applied": 0
+    },
     {
       "date": "2026-08-07",
       "discovered": 102,
